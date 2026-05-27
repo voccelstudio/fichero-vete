@@ -92,6 +92,10 @@ tailwind.config = {
         <span class="material-symbols-outlined">dashboard</span>
         <span>Dashboard</span>
       </div>
+      <div class="sidebar-link" data-view="agenda" onclick="App.navigate('agenda')">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span>Agenda</span>
+      </div>
       <div class="sidebar-link" data-view="patients" onclick="App.navigate('patients')">
         <span class="material-symbols-outlined">pets</span>
         <span>Pacientes</span>
@@ -99,6 +103,10 @@ tailwind.config = {
       <div class="sidebar-link" data-view="services" onclick="App.navigate('services')">
         <span class="material-symbols-outlined">medical_services</span>
         <span>Servicios</span>
+      </div>
+      <div class="sidebar-link" data-view="inventory" onclick="App.navigate('inventory')">
+        <span class="material-symbols-outlined">inventory_2</span>
+        <span>Inventario</span>
       </div>
       <div class="sidebar-link" data-view="settings" onclick="App.navigate('settings')">
         <span class="material-symbols-outlined">settings</span>
@@ -219,6 +227,68 @@ tailwind.config = {
                 </div>
               </div>
             </div>
+            <!-- Vacunas Próximas -->
+            <div class="card p-6">
+              <h4 class="font-bold text-lg mb-3">
+                <span class="material-symbols-outlined align-middle text-sm">vaccines</span>
+                Vacunas Próximas
+              </h4>
+              <div id="dashboard-vaccine-reminders">
+                <div class="empty-state !p-4">
+                  <div class="icon material-symbols-outlined">vaccines</div>
+                  <p class="text-sm">Sin vacunas próximas</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== VIEW: AGENDA ===== -->
+      <div id="view-agenda" class="view">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 class="font-headline text-2xl font-bold text-primary">Agenda</h2>
+            <p class="text-on-surface-variant">Gestioná los turnos y citas programadas.</p>
+          </div>
+          <button class="btn-primary" onclick="App.openAppointmentForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo Turno
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-4 space-y-4">
+            <div class="card p-4">
+              <h4 class="font-bold text-sm mb-3">Filtrar por fecha</h4>
+              <div class="flex flex-wrap gap-2">
+                <button class="px-4 py-2 rounded-lg text-sm font-medium border border-outline-variant hover:bg-surface-container transition-colors agenda-filter active-filtr" data-filter="today" onclick="App.filterAgenda('today')">Hoy</button>
+                <button class="px-4 py-2 rounded-lg text-sm font-medium border border-outline-variant hover:bg-surface-container transition-colors agenda-filter" data-filter="week" onclick="App.filterAgenda('week')">Esta Semana</button>
+                <button class="px-4 py-2 rounded-lg text-sm font-medium border border-outline-variant hover:bg-surface-container transition-colors agenda-filter" data-filter="month" onclick="App.filterAgenda('month')">Este Mes</button>
+                <button class="px-4 py-2 rounded-lg text-sm font-medium border border-outline-variant hover:bg-surface-container transition-colors agenda-filter" data-filter="all" onclick="App.filterAgenda('all')">Todas</button>
+              </div>
+            </div>
+            <div class="card p-4">
+              <h4 class="font-bold text-sm mb-3">Estado</h4>
+              <div class="flex flex-wrap gap-2">
+                <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-outline-variant hover:bg-surface-container transition-colors status-filter active-filtr" data-status="" onclick="App.filterAgendaStatus('')">Todas</button>
+                <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-outline-variant hover:bg-surface-container transition-colors status-filter" data-status="pending" onclick="App.filterAgendaStatus('pending')">Pendiente</button>
+                <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-outline-variant hover:bg-surface-container transition-colors status-filter" data-status="confirmed" onclick="App.filterAgendaStatus('confirmed')">Confirmado</button>
+                <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-outline-variant hover:bg-surface-container transition-colors status-filter" data-status="completed" onclick="App.filterAgendaStatus('completed')">Atendido</button>
+                <button class="px-3 py-1.5 rounded-lg text-xs font-medium border border-outline-variant hover:bg-surface-container transition-colors status-filter" data-status="cancelled" onclick="App.filterAgendaStatus('cancelled')">Cancelado</button>
+              </div>
+            </div>
+          </div>
+          <div class="lg:col-span-8">
+            <div class="card overflow-hidden">
+              <div class="overflow-x-auto" id="agenda-table-container">
+                <div class="empty-state">
+                  <div class="icon material-symbols-outlined">calendar_month</div>
+                  <h4 class="font-bold text-lg mb-2">No hay turnos</h4>
+                  <p class="mb-4">Programá el primer turno.</p>
+                  <button class="btn-primary" onclick="App.openAppointmentForm()">Nuevo Turno</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -333,7 +403,7 @@ tailwind.config = {
               <button class="btn-outline flex-1 justify-center text-sm py-2" onclick="App.editCurrentPatient()">
                 <span class="material-symbols-outlined">edit</span> Editar
               </button>
-              <button class="btn-primary flex-1 justify-center text-sm py-2" onclick="App.exportPatientPDF()">
+              <button class="btn-primary flex-1 justify-center text-sm py-2" onclick="App.exportPatientPDF(event)">
                 <span class="material-symbols-outlined">picture_as_pdf</span> PDF
               </button>
             </div>
@@ -347,6 +417,8 @@ tailwind.config = {
             <div class="card">
               <div class="flex border-b border-outline-variant overflow-x-auto px-4">
                 <button class="tab-btn active" data-tab="history" onclick="App.switchPatientTab('history')">Historial Clínico</button>
+                <button class="tab-btn" data-tab="vaccines" onclick="App.switchPatientTab('vaccines')">Vacunas</button>
+                <button class="tab-btn" data-tab="prescriptions" onclick="App.switchPatientTab('prescriptions')">Recetas</button>
                 <button class="tab-btn" data-tab="info" onclick="App.switchPatientTab('info')">Información</button>
               </div>
               <!-- History Tab -->
@@ -356,6 +428,36 @@ tailwind.config = {
                     <div class="icon material-symbols-outlined">history</div>
                     <p>Sin servicios registrados</p>
                     <button class="btn-secondary mt-3" onclick="App.openServiceForm(App.currentPatientId)">Registrar Servicio</button>
+                  </div>
+                </div>
+              </div>
+              <!-- Vaccines Tab -->
+              <div id="tab-vaccines" class="tab-content p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h4 class="font-bold">Registro de Vacunas</h4>
+                  <button class="btn-primary text-sm py-2" onclick="App.openVaccinationForm(App.currentPatientId)">
+                    <span class="material-symbols-outlined">add</span> Agregar Vacuna
+                  </button>
+                </div>
+                <div id="patient-vaccines">
+                  <div class="empty-state !p-6">
+                    <div class="icon material-symbols-outlined">vaccines</div>
+                    <p>Sin vacunas registradas</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Prescriptions Tab -->
+              <div id="tab-prescriptions" class="tab-content p-6">
+                <div class="flex justify-between items-center mb-4">
+                  <h4 class="font-bold">Recetas Médicas</h4>
+                  <button class="btn-primary text-sm py-2" onclick="App.openPrescriptionForm(App.currentPatientId)">
+                    <span class="material-symbols-outlined">add</span> Nueva Receta
+                  </button>
+                </div>
+                <div id="patient-prescriptions">
+                  <div class="empty-state !p-6">
+                    <div class="icon material-symbols-outlined">description</div>
+                    <p>Sin recetas registradas</p>
                   </div>
                 </div>
               </div>
@@ -400,6 +502,63 @@ tailwind.config = {
         </div>
       </div>
 
+      <!-- ===== VIEW: INVENTORY ===== -->
+      <div id="view-inventory" class="view">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 class="font-headline text-2xl font-bold text-primary">Inventario de Productos</h2>
+            <p class="text-on-surface-variant">Gestioná el stock de tus productos e insumos en tiempo real.</p>
+          </div>
+          <button class="btn-primary" onclick="App.openProductForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo Producto
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="card p-6 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Total Productos</p>
+              <h3 class="text-3xl font-bold text-on-surface" id="inv-stat-total">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+              <span class="material-symbols-outlined">inventory_2</span>
+            </div>
+          </div>
+          <div class="card p-6 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Stock Bajo</p>
+              <h3 class="text-3xl font-bold text-on-surface" id="inv-stat-low">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-800">
+              <span class="material-symbols-outlined">warning</span>
+            </div>
+          </div>
+          <div class="card p-6 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Sin Stock</p>
+              <h3 class="text-3xl font-bold text-on-surface" id="inv-stat-empty">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-800">
+              <span class="material-symbols-outlined">error</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card overflow-hidden">
+          <div class="p-4 border-b border-outline-variant">
+            <input class="form-input" placeholder="Buscar productos..." id="product-search" oninput="App.searchProducts(this.value)">
+          </div>
+          <div class="overflow-x-auto" id="inventory-table-container">
+            <div class="empty-state">
+              <div class="icon material-symbols-outlined">inventory_2</div>
+              <h4 class="font-bold text-lg mb-2">No hay productos</h4>
+              <p class="mb-4">Comienza registrando tu primer producto en stock.</p>
+              <button class="btn-primary" onclick="App.openProductForm()">Registrar Producto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ===== VIEW: SETTINGS ===== -->
       <div id="view-settings" class="view">
         <div class="mb-6">
@@ -417,6 +576,9 @@ tailwind.config = {
               </button>
               <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('pdf')">
                 Config. de PDF
+              </button>
+              <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('appearance')">
+                Apariencia
               </button>
               <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('backup')">
                 Respaldo & Restaurar
@@ -514,6 +676,73 @@ tailwind.config = {
                   </div>
                 </div>
                 <p class="text-sm text-on-surface-variant">Estas opciones afectan cómo aparece tu clínica en los PDFs exportados.</p>
+              </div>
+            </section>
+
+            <!-- Appearance -->
+            <section id="settings-appearance" class="card p-6 settings-section" style="display:none;">
+              <div class="flex items-center gap-2 mb-6 pb-4 border-b border-outline-variant">
+                <span class="material-symbols-outlined text-primary">palette</span>
+                <h3 class="font-headline text-lg font-bold">Apariencia</h3>
+              </div>
+              <div class="space-y-6">
+                <div>
+                  <p class="form-label mb-3">TEMA</p>
+                  <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors" id="theme-mode-light" onclick="App.setThemeMode('light')">
+                      <span class="material-symbols-outlined text-lg">light_mode</span>
+                      <span class="font-medium">Claro</span>
+                      <span class="material-symbols-outlined text-secondary check-icon" id="check-light" style="font-variation-settings:'FILL' 1;display:none;">check_circle</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors" id="theme-mode-dark" onclick="App.setThemeMode('dark')">
+                      <span class="material-symbols-outlined text-lg">dark_mode</span>
+                      <span class="font-medium">Oscuro</span>
+                      <span class="material-symbols-outlined text-secondary check-icon" id="check-dark" style="font-variation-settings:'FILL' 1;display:none;">check_circle</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <p class="form-label mb-3">COLOR PRINCIPAL</p>
+                  <div class="flex flex-wrap gap-3" id="color-presets">
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#00366b;--p:#00366b;--s:#006a63" onclick="App.selectPreset('#00366b','#006a63')" title="Clásico azul"></div>
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#2e7d32;--p:#2e7d32;--s:#00695c" onclick="App.selectPreset('#2e7d32','#00695c')" title="Bosque verde"></div>
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#4a148c;--p:#4a148c;--s:#6a1b9a" onclick="App.selectPreset('#4a148c','#6a1b9a')" title="Lavanda púrpura"></div>
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#e65100;--p:#e65100;--s:#bf360c" onclick="App.selectPreset('#e65100','#bf360c')" title="Atardecer naranja"></div>
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#0d47a1;--p:#0d47a1;--s:#00838f" onclick="App.selectPreset('#0d47a1','#00838f')" title="Marino profundo"></div>
+                    <div class="w-10 h-10 rounded-full cursor-pointer ring-2 ring-offset-2 transition-all hover:scale-110" style="background:#c62828;--p:#c62828;--s:#4e342e" onclick="App.selectPreset('#c62828','#4e342e')" title="Roble caoba"></div>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">Color Principal</label>
+                    <div class="flex gap-2 items-center">
+                      <input class="form-input w-full" id="custom-primary" type="text" value="#00366b" placeholder="#00366b" onchange="App.applyCustomColors()">
+                      <input class="w-10 h-10 rounded cursor-pointer border border-outline-variant flex-shrink-0" id="custom-primary-picker" type="color" value="#00366b" onchange="App.syncColorPicker('primary', this.value)">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="form-label">Color Secundario</label>
+                    <div class="flex gap-2 items-center">
+                      <input class="form-input w-full" id="custom-secondary" type="text" value="#006a63" placeholder="#006a63" onchange="App.applyCustomColors()">
+                      <input class="w-10 h-10 rounded cursor-pointer border border-outline-variant flex-shrink-0" id="custom-secondary-picker" type="color" value="#006a63" onchange="App.syncColorPicker('secondary', this.value)">
+                    </div>
+                  </div>
+                </div>
+                <div class="p-4 bg-surface-container-low rounded-lg flex items-center gap-3">
+                  <span class="material-symbols-outlined text-secondary">visibility</span>
+                  <div class="flex-1">
+                    <p class="font-medium text-sm">Vista previa del color principal</p>
+                    <div class="flex gap-2 mt-2 items-center">
+                      <div class="w-6 h-6 rounded" id="preview-primary" style="background:#00366b"></div>
+                      <div class="w-6 h-6 rounded" id="preview-primary-light" style="background:#d5e3ff"></div>
+                      <div class="w-6 h-6 rounded" id="preview-primary-container" style="background:#1b4d89"></div>
+                      <span class="text-xs text-on-surface-variant">→</span>
+                      <div class="w-6 h-6 rounded" id="preview-secondary" style="background:#006a63"></div>
+                      <div class="w-6 h-6 rounded" id="preview-secondary-light" style="background:#8bf1e6"></div>
+                      <div class="w-6 h-6 rounded" id="preview-secondary-container" style="background:#8bf1e6"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -723,6 +952,21 @@ tailwind.config = {
           <label class="form-label">Observaciones</label>
           <textarea class="form-input resize-none" id="sf-notes" rows="3" placeholder="Detalles del servicio..."></textarea>
         </div>
+        <div class="border-t border-outline-variant pt-3 mt-3">
+          <h4 class="text-xs font-semibold text-on-surface-variant uppercase mb-2">Consumo de Insumo (Opcional)</h4>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <label class="text-[10px] text-on-surface-variant font-semibold">Producto</label>
+              <select class="form-input text-sm py-2 mt-1" id="sf-product">
+                <option value="">Ninguno</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-on-surface-variant font-semibold">Cantidad</label>
+              <input class="form-input text-sm py-2 mt-1" id="sf-product-qty" type="number" min="1" value="1">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
         <button class="btn-ghost" onclick="App.closeModal('service-form-modal')">Cancelar</button>
@@ -745,6 +989,198 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- Appointment Form Modal -->
+  <div id="appointment-form-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('appointment-form-modal')">
+    <div class="modal-content p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-headline text-xl font-bold text-primary">Nuevo Turno</h3>
+        <button class="btn-ghost p-1" onclick="App.closeModal('appointment-form-modal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Paciente</label>
+          <select class="form-input form-select" id="af-patient"></select>
+        </div>
+        <div>
+          <label class="form-label">Tipo de Turno</label>
+          <input class="form-input" id="af-type" placeholder="Ej: Consulta, Cirugía, Baño...">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Fecha</label>
+            <input class="form-input" id="af-date" type="date">
+          </div>
+          <div>
+            <label class="form-label">Hora</label>
+            <input class="form-input" id="af-time" type="time">
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Estado</label>
+          <select class="form-input form-select" id="af-status">
+            <option value="pending">Pendiente</option>
+            <option value="confirmed">Confirmado</option>
+            <option value="completed">Atendido</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Notas</label>
+          <textarea class="form-input resize-none" id="af-notes" rows="2" placeholder="Notas del turno..."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
+        <button class="btn-ghost" onclick="App.closeModal('appointment-form-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="App.saveAppointmentForm()">
+          <span class="material-symbols-outlined">save</span> Guardar Turno
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vaccination Form Modal -->
+  <div id="vaccination-form-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('vaccination-form-modal')">
+    <div class="modal-content p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-headline text-xl font-bold text-primary">Registrar Vacuna</h3>
+        <button class="btn-ghost p-1" onclick="App.closeModal('vaccination-form-modal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Nombre de la Vacuna</label>
+          <input class="form-input" id="vf-name" list="vac-list" placeholder="Ej: Quíntuple, Antirrábica...">
+          <datalist id="vac-list">
+            <option value="Quíntuple (Perros)">
+            <option value="Antirrábica">
+            <option value="Séxtuple (Perros)">
+            <option value="Óctuple (Perros)">
+            <option value="Bordetella (Perros)">
+            <option value="Leptospirosis (Perros)">
+            <option value="Triple Felina">
+            <option value="Cuádruple Felina">
+            <option value="Leucemia Felina">
+            <option value="Desparasitación Interna">
+            <option value="Desparasitación Externa">
+          </datalist>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Fecha de Aplicación</label>
+            <input class="form-input" id="vf-date" type="date">
+          </div>
+          <div>
+            <label class="form-label">Próxima Dosis</label>
+            <input class="form-input" id="vf-next" type="date">
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Lote / Laboratorio</label>
+          <input class="form-input" id="vf-lot" placeholder="Opcional">
+        </div>
+        <div>
+          <label class="form-label">Notas</label>
+          <textarea class="form-input resize-none" id="vf-notes" rows="2" placeholder="Reacciones, observaciones..."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
+        <button class="btn-ghost" onclick="App.closeModal('vaccination-form-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="App.saveVaccinationForm()">
+          <span class="material-symbols-outlined">save</span> Guardar Vacuna
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescription Form Modal -->
+  <div id="prescription-form-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('prescription-form-modal')">
+    <div class="modal-content modal-lg p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-headline text-xl font-bold text-primary">Nueva Receta</h3>
+        <button class="btn-ghost p-1" onclick="App.closeModal('prescription-form-modal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Paciente</label>
+          <input class="form-input font-bold text-primary" id="rf-patient-name" readonly>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Fecha</label>
+            <input class="form-input" id="rf-date" type="date">
+          </div>
+          <div>
+            <label class="form-label">Veterinario</label>
+            <input class="form-input" id="rf-vet" placeholder="Nombre del profesional">
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <label class="form-label mb-0">Medicamentos</label>
+            <button class="text-primary text-sm font-bold flex items-center gap-1" onclick="App.addMedicationRow()">
+              <span class="material-symbols-outlined text-sm">add_circle</span> Agregar
+            </button>
+          </div>
+          <div id="medications-container" class="space-y-2">
+            <div class="med-row grid grid-cols-12 gap-2 items-end p-3 bg-surface-container-low rounded-lg">
+              <div class="col-span-3">
+                <label class="text-[10px] text-on-surface-variant font-semibold">Medicamento</label>
+                <input class="form-input text-sm py-2 mt-1" placeholder="Nombre" list="med-list">
+                <datalist id="med-list">
+                  <option value="Amoxicilina">
+                  <option value="Amoxicilina + Ác. Clavulánico">
+                  <option value="Enrofloxacina">
+                  <option value="Metronidazol">
+                  <option value="Prednisolona">
+                  <option value="Carprofeno">
+                  <option value="Meloxicam">
+                  <option value="Furosemida">
+                  <option value="Omeprazol">
+                  <option value="Doxiciclina">
+                  <option value="Cefalexina">
+                  <option value="Ivermectina">
+                  <option value="Praziquantel">
+                </datalist>
+              </div>
+              <div class="col-span-2">
+                <label class="text-[10px] text-on-surface-variant font-semibold">Dosis</label>
+                <input class="form-input text-sm py-2 mt-1" placeholder="Ej: 500mg">
+              </div>
+              <div class="col-span-3">
+                <label class="text-[10px] text-on-surface-variant font-semibold">Frecuencia</label>
+                <input class="form-input text-sm py-2 mt-1" placeholder="Ej: Cada 12hs">
+              </div>
+              <div class="col-span-2">
+                <label class="text-[10px] text-on-surface-variant font-semibold">Duración</label>
+                <input class="form-input text-sm py-2 mt-1" placeholder="Ej: 7 días">
+              </div>
+              <div class="col-span-2 flex items-end">
+                <button class="btn-ghost p-1 text-error" onclick="App.removeMedicationRow(this)" title="Quitar">
+                  <span class="material-symbols-outlined text-sm">remove_circle</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Indicaciones Adicionales</label>
+          <textarea class="form-input resize-none" id="rf-indications" rows="2" placeholder="Ej: Administrar con alimentos. No suspender sin indicación médica."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
+        <button class="btn-ghost" onclick="App.closeModal('prescription-form-modal')">Cancelar</button>
+        <button class="btn-secondary" onclick="App.savePrescriptionForm()">
+          <span class="material-symbols-outlined">save</span> Guardar Receta
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile Sidebar -->
   <div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black/40 z-50 hidden" onclick="App.toggleMobileSidebar()"></div>
   <aside id="mobile-sidebar" class="fixed left-0 top-0 h-full w-64 z-50 bg-surface shadow-xl transform -translate-x-full transition-transform duration-300 flex flex-col p-4">
@@ -763,17 +1199,65 @@ tailwind.config = {
       <div class="sidebar-link active" data-view="dashboard" onclick="App.navigate('dashboard');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">dashboard</span> Dashboard
       </div>
+      <div class="sidebar-link" data-view="agenda" onclick="App.navigate('agenda');App.toggleMobileSidebar()">
+        <span class="material-symbols-outlined">calendar_month</span> Agenda
+      </div>
       <div class="sidebar-link" data-view="patients" onclick="App.navigate('patients');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">pets</span> Pacientes
       </div>
       <div class="sidebar-link" data-view="services" onclick="App.navigate('services');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">medical_services</span> Servicios
       </div>
+      <div class="sidebar-link" data-view="inventory" onclick="App.navigate('inventory');App.toggleMobileSidebar()">
+        <span class="material-symbols-outlined">inventory_2</span> Inventario
+      </div>
       <div class="sidebar-link" data-view="settings" onclick="App.navigate('settings');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">settings</span> Configuración
       </div>
     </nav>
   </aside>
+
+  <!-- Product Form Modal -->
+  <div id="product-form-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('product-form-modal')">
+    <div class="modal-content p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-headline text-xl font-bold text-primary" id="product-form-title">Nuevo Producto</h3>
+        <button class="btn-ghost p-1" onclick="App.closeModal('product-form-modal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Nombre del Producto / Insumo</label>
+          <input class="form-input" id="pr-name" placeholder="Ej: Shampoo Hipoalergénico 5L">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Stock Actual</label>
+            <input class="form-input" id="pr-stock" type="number" min="0" value="0">
+          </div>
+          <div>
+            <label class="form-label">Stock Mínimo (Alerta)</label>
+            <input class="form-input" id="pr-minstock" type="number" min="0" value="2">
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Precio Unitario ($)</label>
+          <input class="form-input" id="pr-price" type="number" step="0.01" min="0" placeholder="Ej: 1500.00">
+        </div>
+        <div>
+          <label class="form-label">Descripción</label>
+          <textarea class="form-input resize-none" id="pr-description" rows="2" placeholder="Opcional"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
+        <button class="btn-ghost" onclick="App.closeModal('product-form-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="App.saveProductForm()">
+          <span class="material-symbols-outlined">save</span> Guardar Producto
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script src="js/utils.js"></script>
   <script src="js/db.js"></script>

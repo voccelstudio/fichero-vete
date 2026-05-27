@@ -1,5 +1,5 @@
 const DB_NAME = 'VetCareProDB';
-const DB_VERSION = 2;
+const DB_VERSION = 4;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -24,6 +24,20 @@ function openDB() {
         const store = db.createObjectStore('appointments', { keyPath: 'id' });
         store.createIndex('patientId', 'patientId', { unique: false });
         store.createIndex('date', 'date', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('vaccinations')) {
+        const store = db.createObjectStore('vaccinations', { keyPath: 'id' });
+        store.createIndex('patientId', 'patientId', { unique: false });
+        store.createIndex('nextDoseDate', 'nextDoseDate', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('prescriptions')) {
+        const store = db.createObjectStore('prescriptions', { keyPath: 'id' });
+        store.createIndex('patientId', 'patientId', { unique: false });
+        store.createIndex('date', 'date', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('inventory')) {
+        const store = db.createObjectStore('inventory', { keyPath: 'id' });
+        store.createIndex('name', 'name', { unique: false });
       }
     };
     request.onsuccess = (e) => resolve(e.target.result);
@@ -87,6 +101,9 @@ const DB = {
     await this.saveSetting('clinicLogo', data.clinicLogo || '');
     await this.saveSetting('pdfShowLogo', data.pdfShowLogo !== undefined ? data.pdfShowLogo : true);
     await this.saveSetting('pdfShowVat', data.pdfShowVat !== undefined ? data.pdfShowVat : true);
+    await this.saveSetting('themePrimary', data.themePrimary || '#00366b');
+    await this.saveSetting('themeSecondary', data.themeSecondary || '#006a63');
+    await this.saveSetting('themeDarkMode', data.themeDarkMode || false);
   },
   async getClinicSettings() {
     const all = await this.getAllSettings();
@@ -98,11 +115,15 @@ const DB = {
       clinicTaxId: all.clinicTaxId || '',
       clinicLogo: all.clinicLogo || '',
       pdfShowLogo: all.pdfShowLogo !== false,
-      pdfShowVat: all.pdfShowVat !== false
+      pdfShowVat: all.pdfShowVat !== false,
+      themePrimary: all.themePrimary || '#00366b',
+      themeSecondary: all.themeSecondary || '#006a63',
+      themeDarkMode: all.themeDarkMode || false
     };
   },
   async getLastBackupDate() {
-    return this.getSetting('lastBackupDate') || null;
+    const val = await this.getSetting('lastBackupDate');
+    return val || null;
   },
   async setLastBackupDate(date) {
     return this.saveSetting('lastBackupDate', date);
@@ -153,12 +174,12 @@ const DB = {
     if (!query) return patients;
     const q = query.toLowerCase();
     return patients.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.ownerName.toLowerCase().includes(q) ||
-      p.species.toLowerCase().includes(q) ||
-      p.breed.toLowerCase().includes(q) ||
-      p.id.toLowerCase().includes(q) ||
-      p.ownerPhone.includes(q)
+      (p.name || '').toLowerCase().includes(q) ||
+      (p.ownerName || '').toLowerCase().includes(q) ||
+      (p.species || '').toLowerCase().includes(q) ||
+      (p.breed || '').toLowerCase().includes(q) ||
+      (p.id || '').toLowerCase().includes(q) ||
+      (p.ownerPhone || '').includes(q)
     );
   },
 
@@ -268,6 +289,164 @@ const DB = {
     });
   },
 
+  async updateAppointment(id, data) {
+    return dbOperation('appointments', 'readwrite', store => {
+      const req = store.get(id);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => {
+          const existing = req.result;
+          if (!existing) { reject(new Error('Appointment not found')); return; }
+          Object.assign(existing, data);
+          store.put(existing).onsuccess = () => resolve(existing);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getAppointmentsByRange(startDate, endDate) {
+    const all = await this.getAllAppointments();
+    return all.filter(a => a.date >= startDate && a.date <= endDate);
+  },
+
+  // ---- VACCINATIONS ----
+  async addVaccination(vac) {
+    return dbOperation('vaccinations', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.put(vac);
+        req.onsuccess = () => resolve(vac);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getVaccinationsByPatient(patientId) {
+    return dbOperation('vaccinations', 'readonly', store => {
+      const req = store.index('patientId').getAll(patientId);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getAllVaccinations() {
+    return dbOperation('vaccinations', 'readonly', store => {
+      const req = store.getAll();
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getVaccinationsDueSoon(daysAhead = 30) {
+    const all = await this.getAllVaccinations();
+    const today = getToday();
+    const limit = new Date();
+    limit.setDate(limit.getDate() + daysAhead);
+    const limitStr = formatDateInput(limit);
+    return all.filter(v => v.nextDoseDate && v.nextDoseDate >= today && v.nextDoseDate <= limitStr);
+  },
+  async getVaccinationsOverdue() {
+    const all = await this.getAllVaccinations();
+    const today = getToday();
+    return all.filter(v => v.nextDoseDate && v.nextDoseDate < today);
+  },
+  async deleteVaccination(id) {
+    return dbOperation('vaccinations', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+
+  // ---- PRESCRIPTIONS ----
+  async addPrescription(rx) {
+    return dbOperation('prescriptions', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.put(rx);
+        req.onsuccess = () => resolve(rx);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getPrescriptionsByPatient(patientId) {
+    return dbOperation('prescriptions', 'readonly', store => {
+      const req = store.index('patientId').getAll(patientId);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve((req.result || []).sort((a,b) => b.date.localeCompare(a.date)));
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getPrescription(id) {
+    return dbOperation('prescriptions', 'readonly', store => {
+      const req = store.get(id);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async deletePrescription(id) {
+    return dbOperation('prescriptions', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getAllPrescriptions() {
+    return dbOperation('prescriptions', 'readonly', store => {
+      const req = store.getAll();
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+
+  // ---- INVENTORY ----
+  async addProduct(product) {
+    return dbOperation('inventory', 'readwrite', store => {
+      const req = store.put(product);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(product);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async updateProduct(product) {
+    return this.addProduct(product);
+  },
+  async deleteProduct(id) {
+    return dbOperation('inventory', 'readwrite', store => {
+      const req = store.delete(id);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getProduct(id) {
+    return dbOperation('inventory', 'readonly', store => {
+      const req = store.get(id);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getAllProducts() {
+    return dbOperation('inventory', 'readonly', store => {
+      const req = store.getAll();
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+
   // ---- DASHBOARD STATS ----
   async getDashboardStats() {
     const patients = await this.getAllPatients();
@@ -298,16 +477,19 @@ const DB = {
     const patients = await this.getAllPatients();
     const services = await this.getAllServices();
     const appointments = await this.getAllAppointments();
+    const vaccinations = await this.getAllVaccinations();
+    const prescriptions = await this.getAllPrescriptions();
+    const products = await this.getAllProducts();
     const settings = await this.getAllSettings();
     return {
-      version: 2,
+      version: 4,
       exportedAt: new Date().toISOString(),
-      data: { patients, services, appointments, settings }
+      data: { patients, services, appointments, vaccinations, prescriptions, products, settings }
     };
   },
   async importAllData(backup) {
     if (!backup || !backup.data) throw new Error('Formato de backup inválido');
-    const { patients, services, appointments, settings } = backup.data;
+    const { patients, services, appointments, vaccinations, prescriptions, products, settings } = backup.data;
 
     if (patients && patients.length > 0) {
       for (const p of patients) await this.addPatient(p);
@@ -318,6 +500,15 @@ const DB = {
     if (appointments && appointments.length > 0) {
       for (const a of appointments) await this.addAppointment(a);
     }
+    if (vaccinations && vaccinations.length > 0) {
+      for (const v of vaccinations) await this.addVaccination(v);
+    }
+    if (prescriptions && prescriptions.length > 0) {
+      for (const rx of prescriptions) await this.addPrescription(rx);
+    }
+    if (products && products.length > 0) {
+      for (const pr of products) await this.addProduct(pr);
+    }
     if (settings) {
       for (const key of Object.keys(settings)) {
         if (key !== 'lastBackupDate') {
@@ -326,14 +517,14 @@ const DB = {
       }
     }
     await this.setLastBackupDate(getToday());
-    return { patients: patients?.length || 0, services: services?.length || 0, appointments: appointments?.length || 0 };
+    return { patients: patients?.length || 0, services: services?.length || 0, appointments: appointments?.length || 0, vaccinations: vaccinations?.length || 0, prescriptions: prescriptions?.length || 0, products: products?.length || 0 };
   },
 
   // ---- CLEAR ALL ----
   async clearAll() {
     return new Promise((resolve, reject) => {
       openDB().then(db => {
-        const stores = ['settings', 'patients', 'services', 'appointments'];
+        const stores = ['settings', 'patients', 'services', 'appointments', 'vaccinations', 'prescriptions', 'inventory'];
         const tx = db.transaction(stores, 'readwrite');
         stores.forEach(s => tx.objectStore(s).clear());
         tx.oncomplete = () => { db.close(); resolve(); };
