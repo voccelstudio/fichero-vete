@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VETCARE PRO - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(224, 227, 229, 0.5);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed": "#0e1e1e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed-variant": "#3a4a49",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#a7c8ff",
+                        "error": "#ba1a1a",
+                        "background": "#f7f9fb",
+                        "on-tertiary-container": "#b0c2c1",
+                        "inverse-surface": "#2d3133",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#a7c8ff",
+                        "secondary": "#006a63",
+                        "surface": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "primary-fixed": "#d5e3ff",
+                        "on-surface-variant": "#424750",
+                        "on-primary-fixed-variant": "#114783",
+                        "on-secondary-container": "#006f67",
+                        "tertiary-fixed-dim": "#b8cac9",
+                        "tertiary-container": "#405050",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#8ef4e9",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "primary": "#00366b",
+                        "tertiary-fixed": "#d4e6e5",
+                        "on-secondary-fixed": "#00201d",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#1b4d89",
+                        "outline": "#737781",
+                        "on-primary-container": "#98bfff",
+                        "outline-variant": "#c3c6d1",
+                        "tertiary": "#293939",
+                        "surface-tint": "#325f9c",
+                        "on-secondary-fixed-variant": "#00504a",
+                        "secondary-container": "#8bf1e6",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "inverse-on-surface": "#eff1f3",
+                        "secondary-fixed-dim": "#71d7cd",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-fixed": "#001b3c",
+                        "on-surface": "#191c1e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "stack-md": "16px",
+                        "unit": "4px",
+                        "stack-lg": "24px",
+                        "stack-sm": "8px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Manrope"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Manrope"],
+                        "body-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 h-full w-64 z-50 bg-surface dark:bg-inverse-surface border-r border-outline-variant flex flex-col p-stack-md gap-stack-sm hidden md:flex">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">pets</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-primary leading-tight">VETCARE PRO</h1>
+<p class="text-label-md font-label-md text-on-surface-variant">Veterinary Care</p>
+</div>
+</div>
+<nav class="flex-grow space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-primary bg-secondary-container rounded-lg font-bold transition-all cursor-pointer active:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer active:translate-x-1" href="#">
+<span class="material-symbols-outlined">pets</span>
+<span class="font-body-md">Patients</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer active:translate-x-1" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-md">Services</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer active:translate-x-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant space-y-2">
+<button class="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                New Appointment
+            </button>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-body-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all cursor-pointer" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen">
+<!-- Top Navbar -->
+<header class="w-full sticky top-0 z-40 bg-surface-container-lowest shadow-sm flex justify-between items-center px-margin-desktop py-4">
+<div class="flex items-center gap-gutter w-1/3">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary/20 text-body-sm font-body-sm outline-none" placeholder="Search patients or medical records..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-outline-variant pr-6">
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="font-body-sm font-bold text-on-surface">Dr. Méndez</p>
+<p class="text-label-md text-on-surface-variant">Chief Surgeon</p>
+</div>
+<img alt="Veterinarian Profile" class="w-10 h-10 rounded-full object-cover border-2 border-primary-container" data-alt="A professional portrait of a Hispanic male veterinarian in his late 30s, wearing a clean white lab coat and a stethoscope around his neck. The setting is a brightly lit, modern veterinary clinic with soft blue and white tones. He has a warm, confident expression, looking directly at the camera. The lighting is high-key and professional, reinforcing a clinical yet caring atmosphere consistent with a premium medical facility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBek6an53XGPQCCzduaOooVZA8TQu1ZR_NGaiPPTfHPqF4pK_C_EGMdIVM3ZvnNgLhuNYkXQ1lVnMk1MF5xRVIJM98ZPoTj0S8as_xK2f2c6oixKYZ6q8u5__aKenm9xoxxrRFostcJ05KvnW6VK-Ce1WekIrJ5s9B7B43IhONkGj0EvNRVs_ynfW66rZIpgI4bDnAou5VqBfrh5CPIuKfV2-gUokqdq1Bj210TwQMZw6CRxhjdAghsknhZRhcRouGDldmph2Mk2AE5"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="p-margin-desktop max-w-[1440px] mx-auto">
+<!-- Greeting & Header -->
+<div class="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-1">¡Hola, Dr. Méndez!</h2>
+<p class="text-body-lg text-on-surface-variant">Here is an overview of your clinic's activity for today.</p>
+</div>
+<div class="flex items-center gap-stack-sm bg-surface-container-lowest px-4 py-2 rounded-xl shadow-sm border border-outline-variant">
+<span class="material-symbols-outlined text-secondary">calendar_today</span>
+<span class="font-body-md font-bold">Tuesday, October 24</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Left Column: Summary & Quick Actions -->
+<div class="md:col-span-8 space-y-gutter">
+<!-- Stats Cards Row -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest p-stack-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between group hover:border-primary transition-all">
+<div>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Active Patients</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">124</h3>
+<p class="text-label-md text-secondary flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                                    +12% this month
+                                </p>
+</div>
+<div class="w-14 h-14 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[32px]">pets</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-stack-lg rounded-xl shadow-sm border border-outline-variant flex items-center justify-between group hover:border-primary transition-all">
+<div>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Pending Tasks</p>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">08</h3>
+<p class="text-label-md text-error flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+                                    3 High Priority
+                                </p>
+</div>
+<div class="w-14 h-14 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[32px]">checklist</span>
+</div>
+</div>
+</div>
+<!-- Daily Agenda Widget -->
+<section class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<div class="px-stack-lg py-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<h4 class="font-headline-md text-headline-md text-on-surface">Today's Agenda</h4>
+<button class="text-primary text-body-sm font-bold hover:underline">View Calendar</button>
+</div>
+<div class="p-stack-lg space-y-4">
+<!-- Appointment Item -->
+<div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-colors border-l-4 border-primary">
+<div class="text-center min-w-[60px]">
+<p class="font-bold text-on-surface">09:00</p>
+<p class="text-label-md text-on-surface-variant">AM</p>
+</div>
+<div class="flex-grow">
+<p class="font-bold text-on-surface">Luna</p>
+<p class="text-body-sm text-on-surface-variant">Golden Retriever • Check-up</p>
+</div>
+<div class="flex -space-x-2">
+<img alt="Luna" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="A close-up portrait of a friendly Golden Retriever named Luna with a gentle expression and wagging tail. The lighting is soft and warm, suggesting a welcoming clinic environment. The background is a clean, minimalist interior with subtle blue tones. High-detail fur texture and expressive eyes convey the dog's health and happiness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9UdqNjL8ttxM67r40yCdkkECY0-3mQ63vLOfz-jgbtOiJmLrVPuJnEteY1B7YcWkj_NKBzJ2in-b12leTbHPbJfG2EG7MTJTLlf_nAKsg7xLuxkim-1JEJBKoa_FyiRyUPIKvrgar_ItJJcA6zWFbyWNgNCv5j1Z-GnI7NAnIvDOm2rw3CTzgDXcoHGGogFWyA92K779WEEKjgxzlqEc2kzgleqEdbT6MKFzUQ_wdj-Ny85aKy7XbUgzHz5IILNEDuXktBTUPSfLx"/>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<!-- Appointment Item -->
+<div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-colors border-l-4 border-secondary">
+<div class="text-center min-w-[60px]">
+<p class="font-bold text-on-surface">10:30</p>
+<p class="text-label-md text-on-surface-variant">AM</p>
+</div>
+<div class="flex-grow">
+<p class="font-bold text-on-surface">Milo</p>
+<p class="text-body-sm text-on-surface-variant">Feline • Vaccination</p>
+</div>
+<div class="flex -space-x-2">
+<img alt="Milo" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="A portrait of a sleek, healthy domestic shorthair cat named Milo, with vibrant green eyes and a curious expression. The background is a sterilized veterinary examination room with modern equipment softly blurred. The lighting is bright and even, highlighting the cat's clean coat. The overall aesthetic is calm and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0yoyLFVSWuHo-gAiYAkt37FzhSJlSPiRySbOC1zQoRJEai7Bn1UsRHzWOEXTJrFsCwZ1MoiwkZ03Gv3214TcHY7kepFKFSzmwlfTkOPQsH6b7nzdNQqRqLlr-ROkuLVdh-XtFOYOew2kQNMHC7-aemuHd0b-FzlRbp_1j_fte32oYgWJVd-5HyCODMP9E0Bhr16dDYJtpA-dZOjKVj_RW67XtirgMQRS7BFypprJG0cIaYjv_t0z3ZQQk9q-k2X-ogoVgltkt61KD"/>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+<!-- Appointment Item -->
+<div class="flex items-center gap-4 p-3 rounded-lg hover:bg-surface-container-low transition-colors border-l-4 border-primary">
+<div class="text-center min-w-[60px]">
+<p class="font-bold text-on-surface">01:00</p>
+<p class="text-label-md text-on-surface-variant">PM</p>
+</div>
+<div class="flex-grow">
+<p class="font-bold text-on-surface">Toby</p>
+<p class="text-body-sm text-on-surface-variant">Poodle • Dental Cleaning</p>
+</div>
+<div class="flex -space-x-2">
+<img alt="Toby" class="w-8 h-8 rounded-full border-2 border-white object-cover" data-alt="A small, well-groomed white poodle named Toby sitting patiently. The setting is a modern pet care facility with clean surfaces and a clinical calm palette of soft greys and blues. The lighting is bright and cheerful, emphasizing the cleanliness and professionalism of the environment. The focus is sharp on the dog's expressive face and curly coat." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQL-yc46wYqEWuuTKUIM5Kd2O9W2m0Rkqms6P_2srCZaEy3nvItIlXekmT-KEMMX3bcMZJ2WfT17vTUxvWV-VbJA01MigYP6bKzRhanX5fkVygydD0Rpt_7XDXNzkCe35hy8y11BRZ267zvTK9Yf02Z0QN7sT8gftiND42rbY4RV1l5YEm-RC1sWoGYyTKjaBiUGwhNYNYeQdkCNzMr8HnwRzXS5YsySxq53ASS9aAJE-4ebkJLAmS4HR28GITvraoNcw7RJxcGf-v"/>
+</div>
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Quick Actions & Alerts -->
+<aside class="md:col-span-4 space-y-gutter">
+<!-- Quick Actions Panel -->
+<div class="bg-surface-container-highest p-stack-lg rounded-xl shadow-sm border border-outline-variant">
+<h4 class="font-headline-md text-headline-md text-on-surface mb-stack-md">Quick Actions</h4>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-between p-4 bg-primary text-on-primary rounded-lg font-bold hover:brightness-110 transition-all group active:scale-95">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">person_add</span>
+<span>New Patient</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 bg-secondary text-on-secondary rounded-lg font-bold hover:brightness-110 transition-all group active:scale-95">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">medical_information</span>
+<span>Register Service</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 bg-surface-container-lowest text-primary border border-primary rounded-lg font-bold hover:bg-primary-container/10 transition-all group active:scale-95">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">prescriptions</span>
+<span>Prescribe Medication</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Medication Stock Alert (Asymmetric Layout element) -->
+<div class="bg-error-container p-stack-lg rounded-xl shadow-sm border border-error/20">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error mt-1">warning</span>
+<div>
+<h5 class="font-bold text-on-error-container">Stock Alert</h5>
+<p class="text-body-sm text-on-error-container mb-3">3 essential medications are below safety threshold.</p>
+<button class="bg-on-error-container text-white px-4 py-2 rounded-lg text-label-md font-bold hover:opacity-90">Inventory Manager</button>
+</div>
+</div>
+</div>
+<!-- Weekly Progress (Tonal Layer) -->
+<div class="bg-surface-container p-stack-lg rounded-xl border border-outline-variant">
+<h4 class="font-body-md font-bold text-on-surface mb-3">Clinic Capacity</h4>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-label-md mb-1">
+<span>Surgery Room</span>
+<span>85%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[85%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-label-md mb-1">
+<span>Kennel Occupancy</span>
+<span>40%</span>
+</div>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[40%]"></div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Bottom Section: Recent Lab Results -->
+<section class="mt-gutter">
+<div class="bg-surface-container-lowest p-stack-lg rounded-xl shadow-sm border border-outline-variant">
+<div class="flex justify-between items-center mb-6">
+<h4 class="font-headline-md text-headline-md text-on-surface">Recent Lab Results</h4>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary">filter_list</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low text-on-surface-variant text-label-md uppercase tracking-wider">
+<tr>
+<th class="px-4 py-3">Patient</th>
+<th class="px-4 py-3">Test Type</th>
+<th class="px-4 py-3">Date</th>
+<th class="px-4 py-3">Status</th>
+<th class="px-4 py-3 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-4 py-4 font-bold text-on-surface">Max (Beagle)</td>
+<td class="px-4 py-4 text-body-sm">Blood Chemistry</td>
+<td class="px-4 py-4 text-body-sm text-on-surface-variant">20 Oct 2023</td>
+<td class="px-4 py-4">
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-label-md rounded-full font-bold">NORMAL</span>
+</td>
+<td class="px-4 py-4 text-right">
+<button class="text-primary font-bold text-body-sm">Review</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-4 py-4 font-bold text-on-surface">Cleo (Siamese)</td>
+<td class="px-4 py-4 text-body-sm">X-Ray (Abdominal)</td>
+<td class="px-4 py-4 text-body-sm text-on-surface-variant">19 Oct 2023</td>
+<td class="px-4 py-4">
+<span class="px-2 py-1 bg-error-container text-on-error-container text-label-md rounded-full font-bold">REVIEW REQ</span>
+</td>
+<td class="px-4 py-4 text-right">
+<button class="text-primary font-bold text-body-sm">Review</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Micro-interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simple animation for numbers
+            const stats = document.querySelectorAll('h3');
+            stats.forEach(stat => {
+                const target = parseInt(stat.innerText);
+                let current = 0;
+                const increment = Math.ceil(target / 20);
+                const update = () => {
+                    if (current < target) {
+                        current += increment;
+                        if (current > target) current = target;
+                        stat.innerText = current.toString().padStart(target < 10 ? 2 : 1, '0');
+                        requestAnimationFrame(update);
+                    }
+                };
+                update();
+            });
+
+            // Smooth fade-in for cards
+            const cards = document.querySelectorAll('.bg-surface-container-lowest, .bg-surface-container-highest');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100 * index);
+            });
+        });
+    </script>
+</body></html>
