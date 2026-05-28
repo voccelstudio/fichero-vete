@@ -1,5 +1,5 @@
 const DB_NAME = 'VetCareProDB';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -38,6 +38,12 @@ function openDB() {
       if (!db.objectStoreNames.contains('inventory')) {
         const store = db.createObjectStore('inventory', { keyPath: 'id' });
         store.createIndex('name', 'name', { unique: false });
+      }
+      if (!db.objectStoreNames.contains('patientProcedures')) {
+        const store = db.createObjectStore('patientProcedures', { keyPath: 'id' });
+        store.createIndex('patientId', 'patientId', { unique: false });
+        store.createIndex('category', 'category', { unique: false });
+        store.createIndex('nextDate', 'nextDate', { unique: false });
       }
     };
     request.onsuccess = (e) => resolve(e.target.result);
@@ -472,6 +478,81 @@ const DB = {
     };
   },
 
+  // ---- PROCEDURE CATEGORIES (Settings) ----
+  async getProcedureCategories() {
+    const val = await this.getSetting('procedureCategories');
+    return val || { Baño: [], Control: [], Vacunas: [], Pipetas: [] };
+  },
+  async saveProcedureCategories(data) {
+    return this.saveSetting('procedureCategories', data);
+  },
+
+  // ---- PATIENT PROCEDURES ----
+  async addPatientProcedure(pp) {
+    return dbOperation('patientProcedures', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.put(pp);
+        req.onsuccess = () => resolve(pp);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getPatientProceduresByPatient(patientId) {
+    return dbOperation('patientProcedures', 'readonly', store => {
+      const req = store.index('patientId').getAll(patientId);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getAllPatientProcedures() {
+    return dbOperation('patientProcedures', 'readonly', store => {
+      const req = store.getAll();
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getPatientProceduresByCategory(category) {
+    return dbOperation('patientProcedures', 'readonly', store => {
+      const req = store.index('category').getAll(category);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async deletePatientProcedure(id) {
+    return dbOperation('patientProcedures', 'readwrite', store => {
+      return new Promise((resolve, reject) => {
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
+  async getPatientProceduresDueSoon(daysAhead = 30) {
+    const all = await this.getAllPatientProcedures();
+    const today = getToday();
+    const limit = new Date();
+    limit.setDate(limit.getDate() + daysAhead);
+    const limitStr = formatDateInput(limit);
+    return all.filter(p =>
+      (p.category === 'Vacunas' || p.category === 'Pipetas') &&
+      p.nextDate && p.nextDate >= today && p.nextDate <= limitStr
+    );
+  },
+  async getPatientProceduresOverdue() {
+    const all = await this.getAllPatientProcedures();
+    const today = getToday();
+    return all.filter(p =>
+      (p.category === 'Vacunas' || p.category === 'Pipetas') &&
+      p.nextDate && p.nextDate < today
+    );
+  },
+
   // ---- BACKUP ----
   async exportAllData() {
     const patients = await this.getAllPatients();
@@ -480,16 +561,17 @@ const DB = {
     const vaccinations = await this.getAllVaccinations();
     const prescriptions = await this.getAllPrescriptions();
     const products = await this.getAllProducts();
+    const patientProcedures = await this.getAllPatientProcedures();
     const settings = await this.getAllSettings();
     return {
-      version: 4,
+      version: 5,
       exportedAt: new Date().toISOString(),
-      data: { patients, services, appointments, vaccinations, prescriptions, products, settings }
+      data: { patients, services, appointments, vaccinations, prescriptions, products, settings, patientProcedures }
     };
   },
   async importAllData(backup) {
     if (!backup || !backup.data) throw new Error('Formato de backup inválido');
-    const { patients, services, appointments, vaccinations, prescriptions, products, settings } = backup.data;
+    const { patients, services, appointments, vaccinations, prescriptions, products, settings, patientProcedures } = backup.data;
 
     if (patients && patients.length > 0) {
       for (const p of patients) await this.addPatient(p);
@@ -509,6 +591,9 @@ const DB = {
     if (products && products.length > 0) {
       for (const pr of products) await this.addProduct(pr);
     }
+    if (patientProcedures && patientProcedures.length > 0) {
+      for (const pp of patientProcedures) await this.addPatientProcedure(pp);
+    }
     if (settings) {
       for (const key of Object.keys(settings)) {
         if (key !== 'lastBackupDate') {
@@ -517,14 +602,14 @@ const DB = {
       }
     }
     await this.setLastBackupDate(getToday());
-    return { patients: patients?.length || 0, services: services?.length || 0, appointments: appointments?.length || 0, vaccinations: vaccinations?.length || 0, prescriptions: prescriptions?.length || 0, products: products?.length || 0 };
+    return { patients: patients?.length || 0, services: services?.length || 0, appointments: appointments?.length || 0, vaccinations: vaccinations?.length || 0, prescriptions: prescriptions?.length || 0, products: products?.length || 0, patientProcedures: patientProcedures?.length || 0 };
   },
 
   // ---- CLEAR ALL ----
   async clearAll() {
     return new Promise((resolve, reject) => {
       openDB().then(db => {
-        const stores = ['settings', 'patients', 'services', 'appointments', 'vaccinations', 'prescriptions', 'inventory'];
+        const stores = ['settings', 'patients', 'services', 'appointments', 'vaccinations', 'prescriptions', 'inventory', 'patientProcedures'];
         const tx = db.transaction(stores, 'readwrite');
         stores.forEach(s => tx.objectStore(s).clear());
         tx.oncomplete = () => { db.close(); resolve(); };

@@ -33,6 +33,7 @@ const App = {
       case 'agenda': this.loadAgenda(); break;
       case 'patients': this.loadPatients(); break;
       case 'services': this.loadServices(); break;
+      case 'procedures': this.loadProcedures(); break;
       case 'inventory': this.loadInventory(); break;
       case 'settings': this.loadSettingsForm(); break;
     }
@@ -56,7 +57,7 @@ const App = {
     const stats = await DB.getDashboardStats();
     document.getElementById('stat-patients').textContent = stats.totalPatients;
     document.getElementById('stat-month-services').textContent = stats.monthServices;
-    document.getElementById('dashboard-greeting').textContent = `¡Hola! Bienvenido a VetCare Pro`;
+    document.getElementById('dashboard-greeting').textContent = `Panel General — ¡Hola! Bienvenido a VetCare Pro`;
     document.getElementById('dashboard-subtitle').textContent = `${getTodayDisplay()} — ${stats.totalPatients} pacientes registrados.`;
     document.getElementById('top-date').textContent = getTodayDisplay();
 
@@ -68,6 +69,7 @@ const App = {
     await this.renderDashboardAgenda();
     await this.renderSpeciesChart();
     await this.renderDashboardVaccineReminders();
+    await this.renderDashboardProcedureReminders();
   },
 
   async renderDashboardServices() {
@@ -174,6 +176,35 @@ const App = {
               <span class="material-symbols-outlined text-lg">chat</span>
             </button>
           ` : ''}
+        </div>`;
+      }
+      html += `</div>`;
+      container.innerHTML = html;
+    } catch (e) {
+      container.innerHTML = `<div class="empty-state !p-4"><p class="text-sm">Sin datos</p></div>`;
+    }
+  },
+
+  async renderDashboardProcedureReminders() {
+    const container = document.getElementById('dashboard-procedure-reminders');
+    try {
+      const due = await DB.getPatientProceduresDueSoon(30);
+      const overdue = await DB.getPatientProceduresOverdue();
+      const all = [...overdue, ...due];
+      if (all.length === 0) {
+        container.innerHTML = `<div class="empty-state !p-4"><div class="icon material-symbols-outlined">stethoscope</div><p class="text-sm">Sin procedimientos próximos</p></div>`;
+        return;
+      }
+      let html = `<div class="space-y-2">`;
+      for (const p of all) {
+        const patient = await DB.getPatient(p.patientId);
+        const isOverdue = overdue.includes(p);
+        html += `<div class="flex items-center gap-3 p-3 rounded-lg ${isOverdue ? 'bg-error-container border-l-4' : 'bg-surface-container-low border-l-4'} ${isOverdue ? '' : 'border-l-secondary'} transition-colors">
+          <div class="flex-1">
+            <p class="font-bold text-sm">${patient ? escapeHtml(patient.name) : '—'}</p>
+            <p class="text-xs text-on-surface-variant">${escapeHtml(p.category)}: ${escapeHtml(p.procedureName)}</p>
+            <p class="text-xs ${isOverdue ? 'text-on-error-container font-bold' : 'text-on-surface-variant'}">${isOverdue ? 'VENCIDA: ' : 'Próxima: '}${formatDateShort(p.nextDate)}</p>
+          </div>
         </div>`;
       }
       html += `</div>`;
@@ -1012,6 +1043,179 @@ const App = {
     );
   },
 
+  // ===== PROCEDURES =====
+  async loadProcedures() {
+    const procedures = await DB.getAllPatientProcedures();
+    this.renderProceduresList(procedures);
+  },
+
+  async renderProceduresList(procedures) {
+    const container = document.getElementById('procedures-table-container');
+    if (procedures.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="icon material-symbols-outlined">stethoscope</div><h4 class="font-bold text-lg mb-2">No hay procedimientos</h4><p class="mb-4">Registrá el primer procedimiento.</p><button class="btn-primary" onclick="App.openProcedureForm()">Nuevo Procedimiento</button></div>`;
+      return;
+    }
+    const sorted = [...procedures].sort((a, b) => (b.date + (b.createdAt || '')).localeCompare(a.date + (a.createdAt || '')));
+    let html = `<table class="data-table"><thead><tr><th>Paciente</th><th>Categoría</th><th>Procedimiento</th><th>Fecha</th><th>Profesional</th><th>Próxima Fecha</th><th></th></tr></thead><tbody>`;
+    for (const p of sorted) {
+      const patient = p.patientId ? await DB.getPatient(p.patientId) : null;
+      html += `<tr>
+        <td class="font-bold text-primary">${patient ? escapeHtml(patient.name) : '—'}</td>
+        <td><span class="badge badge-secondary">${escapeHtml(p.category)}</span></td>
+        <td class="font-medium">${escapeHtml(p.procedureName)}</td>
+        <td class="text-on-surface-variant">${formatDateShort(p.date)}</td>
+        <td>${escapeHtml(p.performedBy || '—')}</td>
+        <td class="text-on-surface-variant">${p.nextDate ? formatDateShort(p.nextDate) : '—'}</td>
+        <td>
+          <div class="flex gap-1 items-center">
+            <button class="btn-ghost p-1 text-error" onclick="App.showDeleteProcedure('${p.id}')" title="Eliminar"><span class="material-symbols-outlined text-sm">delete</span></button>
+          </div>
+        </td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  },
+
+  async searchProcedures(query) {
+    const all = await DB.getAllPatientProcedures();
+    if (!query) { this.renderProceduresList(all); return; }
+    const q = query.toLowerCase();
+    const patients = await DB.getAllPatients();
+    const patientMap = {};
+    patients.forEach(p => { patientMap[p.id] = p; });
+    const filtered = all.filter(pp => {
+      const patient = patientMap[pp.patientId];
+      const patientName = patient ? patient.name.toLowerCase() : '';
+      return pp.procedureName.toLowerCase().includes(q) ||
+             pp.category.toLowerCase().includes(q) ||
+             pp.performedBy.toLowerCase().includes(q) ||
+             patientName.includes(q);
+    });
+    this.renderProceduresList(filtered);
+  },
+
+  async openProcedureForm() {
+    const modal = document.getElementById('procedure-form-modal');
+    const select = document.getElementById('ppf-patient');
+    select.innerHTML = '<option value="">Seleccionar paciente...</option>';
+    const patients = await DB.getAllPatients();
+    patients.forEach(p => {
+      select.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.species)})</option>`;
+    });
+    document.getElementById('ppf-date').value = getToday();
+    document.getElementById('ppf-performer').value = '';
+    document.getElementById('ppf-next').value = '';
+    document.getElementById('ppf-notes').value = '';
+    document.getElementById('ppf-category').value = 'Baño';
+    await this.updateProcedureSelect();
+    modal.classList.add('open');
+  },
+
+  async updateProcedureSelect() {
+    const category = document.getElementById('ppf-category').value;
+    const select = document.getElementById('ppf-procedure');
+    select.innerHTML = '<option value="">Seleccionar procedimiento...</option>';
+    const cats = await DB.getProcedureCategories();
+    const procedures = cats[category] || [];
+    procedures.forEach(p => {
+      select.innerHTML += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
+    });
+  },
+
+  async saveProcedureForm() {
+    const patientId = document.getElementById('ppf-patient').value;
+    if (!patientId) { alert('Seleccioná un paciente.'); return; }
+    const category = document.getElementById('ppf-category').value;
+    const procedureName = document.getElementById('ppf-procedure').value;
+    if (!procedureName) { alert('Seleccioná un procedimiento.'); return; }
+    const date = document.getElementById('ppf-date').value;
+    if (!date) { alert('Seleccioná una fecha.'); return; }
+
+    const data = {
+      id: generateId('PP'),
+      patientId,
+      category,
+      procedureName,
+      date,
+      performedBy: document.getElementById('ppf-performer').value.trim(),
+      nextDate: document.getElementById('ppf-next').value || '',
+      notes: document.getElementById('ppf-notes').value.trim(),
+      createdAt: getToday()
+    };
+    await DB.addPatientProcedure(data);
+    this.closeModal('procedure-form-modal');
+    if (this.currentView === 'procedures') await this.loadProcedures();
+    else if (this.currentView === 'dashboard') await this.loadDashboard();
+  },
+
+  showDeleteProcedure(id) {
+    this.showConfirm('Eliminar Procedimiento', '¿Eliminar este procedimiento?', async () => {
+      await DB.deletePatientProcedure(id);
+      if (this.currentView === 'procedures') await this.loadProcedures();
+      else if (this.currentView === 'dashboard') await this.loadDashboard();
+    });
+  },
+
+  // ===== SETTINGS - PROCEDURE CATEGORIES =====
+  async loadProcedureCategoriesSettings() {
+    const cats = await DB.getProcedureCategories();
+    const container = document.getElementById('procedure-categories-container');
+    let html = '';
+    const categoryIcons = { Baño: 'bathtime', Control: 'monitor_heart', Vacunas: 'vaccines', Pipetas: 'science' };
+    for (const [catName, procedures] of Object.entries(cats)) {
+      html += `<div class="card p-4 border border-outline-variant">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">${categoryIcons[catName] || 'stethoscope'}</span>
+            <h4 class="font-bold text-primary">${catName}</h4>
+          </div>
+          <button class="btn-ghost text-sm py-1 px-2 text-primary" onclick="App.addProcedureToCategory('${catName}')">
+            <span class="material-symbols-outlined text-sm">add</span> Agregar
+          </button>
+        </div>
+        <div id="proc-list-${catName}" class="space-y-1">
+          ${procedures.length === 0 ? '<p class="text-xs text-on-surface-variant italic">Sin procedimientos</p>' : ''}
+          ${procedures.map(p => `
+            <div class="flex items-center justify-between px-3 py-2 bg-surface-container-low rounded-lg">
+              <span class="text-sm">${escapeHtml(p)}</span>
+              <button class="btn-ghost p-0.5 text-error" onclick="App.removeProcedureFromCategory('${catName}', '${escapeHtml(p).replace(/'/g, "\\'")}')">
+                <span class="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    }
+    container.innerHTML = html;
+  },
+
+  addProcedureToCategory(category) {
+    const name = prompt(`Ingresá el nombre del procedimiento para "${category}":`);
+    if (!name || !name.trim()) return;
+    this._addProcedureToCategory(category, name.trim());
+  },
+
+  async _addProcedureToCategory(category, name) {
+    const cats = await DB.getProcedureCategories();
+    if (!cats[category]) cats[category] = [];
+    if (cats[category].includes(name)) {
+      alert('Este procedimiento ya existe en esta categoría.');
+      return;
+    }
+    cats[category].push(name);
+    await DB.saveProcedureCategories(cats);
+    await this.loadProcedureCategoriesSettings();
+  },
+
+  async removeProcedureFromCategory(category, name) {
+    const cats = await DB.getProcedureCategories();
+    if (!cats[category]) return;
+    cats[category] = cats[category].filter(p => p !== name);
+    await DB.saveProcedureCategories(cats);
+    await this.loadProcedureCategoriesSettings();
+  },
+
   // ===== INVENTORY =====
   async loadInventory() {
     const products = await DB.getAllProducts();
@@ -1222,11 +1426,15 @@ const App = {
           (tab === 'branding' && b.textContent.includes('Logo')) ||
           (tab === 'pdf' && b.textContent.includes('PDF')) ||
           (tab === 'appearance' && b.textContent.includes('Apariencia')) ||
+          (tab === 'procedures' && b.textContent.includes('Procedimientos')) ||
           (tab === 'backup' && b.textContent.includes('Respaldo'))) {
         b.classList.remove('text-on-surface-variant');
         b.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md');
       }
     });
+    if (tab === 'procedures') {
+      this.loadProcedureCategoriesSettings();
+    }
   },
 
   handleLogoUpload(event) {

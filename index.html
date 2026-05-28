@@ -90,7 +90,7 @@ tailwind.config = {
     <nav class="flex-1 space-y-1">
       <div class="sidebar-link active" data-view="dashboard" onclick="App.navigate('dashboard')">
         <span class="material-symbols-outlined">dashboard</span>
-        <span>Dashboard</span>
+        <span>Panel General</span>
       </div>
       <div class="sidebar-link" data-view="agenda" onclick="App.navigate('agenda')">
         <span class="material-symbols-outlined">calendar_month</span>
@@ -103,6 +103,10 @@ tailwind.config = {
       <div class="sidebar-link" data-view="services" onclick="App.navigate('services')">
         <span class="material-symbols-outlined">medical_services</span>
         <span>Servicios</span>
+      </div>
+      <div class="sidebar-link" data-view="procedures" onclick="App.navigate('procedures')">
+        <span class="material-symbols-outlined">stethoscope</span>
+        <span>Procedimientos</span>
       </div>
       <div class="sidebar-link" data-view="inventory" onclick="App.navigate('inventory')">
         <span class="material-symbols-outlined">inventory_2</span>
@@ -145,7 +149,7 @@ tailwind.config = {
       <!-- ===== VIEW: DASHBOARD ===== -->
       <div id="view-dashboard" class="view active">
         <div class="mb-6">
-          <h2 class="font-headline text-2xl font-bold text-primary mb-1" id="dashboard-greeting">Dashboard</h2>
+          <h2 class="font-headline text-2xl font-bold text-primary mb-1" id="dashboard-greeting">Panel General</h2>
           <p class="text-on-surface-variant" id="dashboard-subtitle">Resumen de actividad de la clínica.</p>
         </div>
         <!-- Backup Banner -->
@@ -237,6 +241,19 @@ tailwind.config = {
                 <div class="empty-state !p-4">
                   <div class="icon material-symbols-outlined">vaccines</div>
                   <p class="text-sm">Sin vacunas próximas</p>
+                </div>
+              </div>
+            </div>
+            <!-- Próximos Procedimientos (Vacunas/Pipetas) -->
+            <div class="card p-6">
+              <h4 class="font-bold text-lg mb-3">
+                <span class="material-symbols-outlined align-middle text-sm">stethoscope</span>
+                Próximos Procedimientos
+              </h4>
+              <div id="dashboard-procedure-reminders">
+                <div class="empty-state !p-4">
+                  <div class="icon material-symbols-outlined">stethoscope</div>
+                  <p class="text-sm">Sin procedimientos próximos</p>
                 </div>
               </div>
             </div>
@@ -502,6 +519,32 @@ tailwind.config = {
         </div>
       </div>
 
+      <!-- ===== VIEW: PROCEDURES ===== -->
+      <div id="view-procedures" class="view">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 class="font-headline text-2xl font-bold text-primary">Procedimientos</h2>
+            <p class="text-on-surface-variant">Registrá los procedimientos realizados a cada paciente.</p>
+          </div>
+          <button class="btn-primary" onclick="App.openProcedureForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo Procedimiento
+          </button>
+        </div>
+        <div class="card overflow-hidden">
+          <div class="p-4 border-b border-outline-variant">
+            <input class="form-input" placeholder="Buscar procedimientos..." id="procedure-search" oninput="App.searchProcedures(this.value)">
+          </div>
+          <div class="overflow-x-auto" id="procedures-table-container">
+            <div class="empty-state">
+              <div class="icon material-symbols-outlined">stethoscope</div>
+              <h4 class="font-bold text-lg mb-2">No hay procedimientos</h4>
+              <p class="mb-4">Registrá el primer procedimiento.</p>
+              <button class="btn-primary" onclick="App.openProcedureForm()">Nuevo Procedimiento</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ===== VIEW: INVENTORY ===== -->
       <div id="view-inventory" class="view">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -579,6 +622,9 @@ tailwind.config = {
               </button>
               <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('appearance')">
                 Apariencia
+              </button>
+              <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('procedures')">
+                Procedimientos
               </button>
               <button class="w-full text-left px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" onclick="App.switchSettingsTab('backup')">
                 Respaldo & Restaurar
@@ -743,6 +789,18 @@ tailwind.config = {
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+
+            <!-- Procedures -->
+            <section id="settings-procedures" class="card p-6 settings-section" style="display:none;">
+              <div class="flex items-center gap-2 mb-6 pb-4 border-b border-outline-variant">
+                <span class="material-symbols-outlined text-primary">stethoscope</span>
+                <h3 class="font-headline text-lg font-bold">Procedimientos</h3>
+              </div>
+              <p class="text-sm text-on-surface-variant mb-4">Definí los procedimientos disponibles para cada categoría. Luego podrás asignarlos a los pacientes desde la sección Procedimientos.</p>
+              <div id="procedure-categories-container" class="space-y-4">
+                <!-- Cada categoría se renderiza acá -->
               </div>
             </section>
 
@@ -977,6 +1035,61 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- Procedure Form Modal -->
+  <div id="procedure-form-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('procedure-form-modal')">
+    <div class="modal-content p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="font-headline text-xl font-bold text-primary">Registrar Procedimiento</h3>
+        <button class="btn-ghost p-1" onclick="App.closeModal('procedure-form-modal')">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="form-label">Paciente</label>
+          <select class="form-input form-select" id="ppf-patient"></select>
+        </div>
+        <div>
+          <label class="form-label">Categoría</label>
+          <select class="form-input form-select" id="ppf-category" onchange="App.updateProcedureSelect()">
+            <option value="Baño">Baño</option>
+            <option value="Control">Control</option>
+            <option value="Vacunas">Vacunas</option>
+            <option value="Pipetas">Pipetas</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Procedimiento</label>
+          <select class="form-input form-select" id="ppf-procedure"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="form-label">Fecha</label>
+            <input class="form-input" id="ppf-date" type="date">
+          </div>
+          <div>
+            <label class="form-label">Realizado Por</label>
+            <input class="form-input" id="ppf-performer" placeholder="Nombre del profesional">
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Próxima Fecha (opcional)</label>
+          <input class="form-input" id="ppf-next" type="date">
+        </div>
+        <div>
+          <label class="form-label">Observaciones</label>
+          <textarea class="form-input resize-none" id="ppf-notes" rows="3" placeholder="Detalles del procedimiento..."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-outline-variant">
+        <button class="btn-ghost" onclick="App.closeModal('procedure-form-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="App.saveProcedureForm()">
+          <span class="material-symbols-outlined">save</span> Guardar Procedimiento
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Confirm Modal -->
   <div id="confirm-modal" class="modal-overlay" onclick="if(event.target===this)App.closeModal('confirm-modal')">
     <div class="modal-content modal-sm p-6">
@@ -1197,7 +1310,7 @@ tailwind.config = {
     </div>
     <nav class="flex-1 space-y-1">
       <div class="sidebar-link active" data-view="dashboard" onclick="App.navigate('dashboard');App.toggleMobileSidebar()">
-        <span class="material-symbols-outlined">dashboard</span> Dashboard
+        <span class="material-symbols-outlined">dashboard</span> Panel General
       </div>
       <div class="sidebar-link" data-view="agenda" onclick="App.navigate('agenda');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">calendar_month</span> Agenda
@@ -1207,6 +1320,9 @@ tailwind.config = {
       </div>
       <div class="sidebar-link" data-view="services" onclick="App.navigate('services');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">medical_services</span> Servicios
+      </div>
+      <div class="sidebar-link" data-view="procedures" onclick="App.navigate('procedures');App.toggleMobileSidebar()">
+        <span class="material-symbols-outlined">stethoscope</span> Procedimientos
       </div>
       <div class="sidebar-link" data-view="inventory" onclick="App.navigate('inventory');App.toggleMobileSidebar()">
         <span class="material-symbols-outlined">inventory_2</span> Inventario
