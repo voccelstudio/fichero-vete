@@ -203,14 +203,85 @@
         <div class="card mt" id="backup-last"></div>
       </section>
 
-      <!-- ---- Vistas placeholder (siguiente tanda) ---- -->
+      <!-- ---- PACIENTES ---- -->
       <section class="view" id="view-patients">
-        <div class="page-head"><div><h1 class="page-title">Pacientes</h1>
-        <div class="page-sub">Se habilita en la siguiente tanda.</div></div></div>
-        <div class="card empty-state">
-          <span class="material-symbols-outlined">pets</span>
-          <div>El módulo de pacientes viene en la próxima iteración.</div>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Pacientes</h1>
+            <div class="page-sub">Fichas de mascotas y sus dueños</div>
+          </div>
+          <button class="btn btn-primary" onclick="Patients.openForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo paciente
+          </button>
         </div>
+
+        <div class="card mb">
+          <div class="row wrap" style="gap:12px">
+            <input type="text" class="input" id="pat-search" placeholder="Buscar por nombre, dueño, raza, teléfono…" style="flex:1;min-width:220px" />
+            <select class="input" id="pat-species" style="width:180px">
+              <option value="">Todas las especies</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="patients-list"></div>
+      </section>
+
+      <!-- ---- DETALLE DE PACIENTE ---- -->
+      <section class="view" id="view-patient-detail">
+        <div class="page-head">
+          <div class="row">
+            <button class="btn btn-ghost" onclick="App.navigate('patients')">
+              <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <div>
+              <h1 class="page-title" id="pd-name">Paciente</h1>
+              <div class="page-sub" id="pd-sub"></div>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="Patients.editCurrent()">
+              <span class="material-symbols-outlined">edit</span> Editar
+            </button>
+            <button class="btn btn-danger" onclick="Patients.removeCurrent()">
+              <span class="material-symbols-outlined">delete</span> Eliminar
+            </button>
+          </div>
+        </div>
+        <div id="patient-detail-body"></div>
+      </section>
+
+      <!-- ---- AGENDA ---- -->
+      <section class="view" id="view-agenda">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Agenda</h1>
+            <div class="page-sub">Turnos y citas programadas</div>
+          </div>
+          <button class="btn btn-primary" onclick="Agenda.openForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo turno
+          </button>
+        </div>
+
+        <div class="card mb">
+          <div class="row wrap" style="gap:12px">
+            <div class="segmented" id="agenda-range">
+              <button data-range="today" class="active">Hoy</button>
+              <button data-range="week">Semana</button>
+              <button data-range="month">Mes</button>
+              <button data-range="all">Todas</button>
+            </div>
+            <select class="input" id="agenda-status" style="width:180px">
+              <option value="">Todos los estados</option>
+              <option value="pending">Pendiente</option>
+              <option value="confirmed">Confirmado</option>
+              <option value="completed">Atendido</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="agenda-list"></div>
       </section>
 
       <section class="view" id="view-sales">
@@ -238,15 +309,6 @@
 
         <div class="kpi-grid" id="sales-summary"></div>
         <div id="sales-list"></div>
-      </section>
-
-      <section class="view" id="view-agenda">
-        <div class="page-head"><div><h1 class="page-title">Agenda</h1>
-        <div class="page-sub">Se habilita en la siguiente tanda.</div></div></div>
-        <div class="card empty-state">
-          <span class="material-symbols-outlined">event</span>
-          <div>La agenda viene en la próxima iteración.</div>
-        </div>
       </section>
 
       <section class="view" id="view-inventory">
@@ -416,10 +478,120 @@
     </div>
   </div>
 
+  <!-- Paciente (alta/edición) -->
+  <div class="modal-overlay" id="modal-patient">
+    <div class="modal glass-strong modal-wide">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem" id="patient-modal-title">Nuevo paciente</h2>
+        <button class="modal-close" onclick="Patients.closeForm()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="patient-form">
+        <div class="card-title mb">Mascota</div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Nombre *</label>
+            <input type="text" class="input" name="name" required placeholder="Nombre del animal" /></div>
+          <div class="field"><label>Especie</label>
+            <select class="input" name="species" id="pf-species"></select></div>
+        </div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Raza</label>
+            <input type="text" class="input" name="breed" id="pf-breed" placeholder="Raza" /></div>
+          <div class="field"><label>Sexo</label>
+            <select class="input" name="sex">
+              <option value="Macho">Macho</option>
+              <option value="Hembra">Hembra</option>
+            </select></div>
+        </div>
+        <div class="grid-3 mb">
+          <div class="field"><label>Edad (años)</label>
+            <input type="number" class="input" name="ageYears" min="0" step="1" value="0" /></div>
+          <div class="field"><label>Edad (meses)</label>
+            <input type="number" class="input" name="ageMonths" min="0" step="1" value="0" /></div>
+          <div class="field"><label>Peso (kg)</label>
+            <input type="number" class="input" name="weight" min="0" step="any" value="0" /></div>
+        </div>
+        <div class="grid-3 mb">
+          <div class="field"><label>Color</label>
+            <input type="text" class="input" name="color" placeholder="Color" /></div>
+          <div class="field"><label>Microchip</label>
+            <input type="text" class="input" name="microchip" placeholder="N° microchip" /></div>
+          <div class="field"><label>Esterilizado</label>
+            <select class="input" name="neutered">
+              <option value="no">No</option>
+              <option value="yes">Sí</option>
+            </select></div>
+        </div>
+        <div class="field mb"><label>Señas / marcas</label>
+          <input type="text" class="input" name="marks" placeholder="Marcas particulares" /></div>
+
+        <div class="divider"></div>
+        <div class="card-title mb">Dueño</div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Nombre del dueño *</label>
+            <input type="text" class="input" name="ownerName" required placeholder="Nombre" /></div>
+          <div class="field"><label>Teléfono</label>
+            <input type="text" class="input" name="ownerPhone" placeholder="Número con WhatsApp" /></div>
+        </div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Email</label>
+            <input type="email" class="input" name="ownerEmail" placeholder="Email" /></div>
+          <div class="field"><label>Dirección</label>
+            <input type="text" class="input" name="ownerAddress" placeholder="Dirección" /></div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="field mb"><label>Alertas médicas</label>
+          <textarea class="input" name="alerts" rows="2" placeholder="Alergias, condiciones…"></textarea></div>
+        <div class="field mb"><label>Notas</label>
+          <textarea class="input" name="notes" rows="2" placeholder="Observaciones"></textarea></div>
+
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="Patients.closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><span class="material-symbols-outlined">save</span> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Turno (alta/edición) -->
+  <div class="modal-overlay" id="modal-appointment">
+    <div class="modal glass-strong">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem" id="appointment-modal-title">Nuevo turno</h2>
+        <button class="modal-close" onclick="Agenda.closeForm()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="appointment-form">
+        <div class="field mb"><label>Paciente *</label>
+          <select class="input" name="patientId" id="apf-patient" required></select></div>
+        <div class="field mb"><label>Tipo de turno</label>
+          <select class="input" name="type" id="apf-type"></select></div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Fecha *</label>
+            <input type="date" class="input" name="date" id="apf-date" required /></div>
+          <div class="field"><label>Hora</label>
+            <input type="time" class="input" name="time" /></div>
+        </div>
+        <div class="field mb"><label>Estado</label>
+          <select class="input" name="status">
+            <option value="pending">Pendiente</option>
+            <option value="confirmed">Confirmado</option>
+            <option value="completed">Atendido</option>
+            <option value="cancelled">Cancelado</option>
+          </select></div>
+        <div class="field mb"><label>Notas</label>
+          <textarea class="input" name="notes" rows="2" placeholder="Motivo, observaciones…"></textarea></div>
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="Agenda.closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><span class="material-symbols-outlined">save</span> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Contenedor off-screen para generar PDFs -->
   <div id="pdf-container" style="position:fixed;left:-10000px;top:0;width:794px"></div>
 
-  <!-- Orden de scripts: utils -> db -> pdf -> backup -> inventory -> sales -> movement -> app -->
+  <!-- Orden de scripts: utils -> db -> pdf -> backup -> inventory -> sales -> movement -> patients -> agenda -> app -->
   <script src="js/utils.js"></script>
   <script src="js/db.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
@@ -428,6 +600,8 @@
   <script src="js/inventory.js"></script>
   <script src="js/sales.js"></script>
   <script src="js/movement.js"></script>
+  <script src="js/patients.js"></script>
+  <script src="js/agenda.js"></script>
   <script src="js/app.js"></script>
   <script>
     // Conexión de los botones del comparativo y del tema.

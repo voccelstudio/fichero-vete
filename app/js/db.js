@@ -315,6 +315,15 @@ const DB = {
       });
     });
   },
+  async getAppointment(id) {
+    return dbOperation('appointments', 'readonly', store => {
+      const req = store.get(id);
+      return new Promise((resolve, reject) => {
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  },
   async getAppointmentsByDate(date) {
     return dbOperation('appointments', 'readonly', store => {
       const idx = store.index('date');
