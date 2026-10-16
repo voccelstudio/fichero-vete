@@ -33,6 +33,8 @@ const App = {
     this.bindMobileMenu();
     this.bindBackupControls();
     Movement.init();
+    Inventory.init();
+    Sales.init();
     this.navigate('movement');   // primer landing: el módulo estrella
     this.loadDashboard();
   },
@@ -59,6 +61,8 @@ const App = {
     if (view === 'dashboard') this.loadDashboard();
     if (view === 'movement') Movement.refresh();
     if (view === 'backup') this.loadBackupView();
+    if (view === 'sales') Sales.load().then(() => Sales.render());
+    if (view === 'inventory') Inventory.load();
   },
 
   bindMobileMenu() {

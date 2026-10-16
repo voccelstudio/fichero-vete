@@ -198,12 +198,30 @@
       </section>
 
       <section class="view" id="view-sales">
-        <div class="page-head"><div><h1 class="page-title">Ventas / Caja</h1>
-        <div class="page-sub">Se habilita en la siguiente tanda.</div></div></div>
-        <div class="card empty-state">
-          <span class="material-symbols-outlined">point_of_sale</span>
-          <div>El punto de venta viene en la próxima iteración.</div>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Ventas / Caja</h1>
+            <div class="page-sub">Punto de venta, historial y cierre de caja</div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btn-cash-close">
+              <span class="material-symbols-outlined">account_balance</span> Cierre de caja
+            </button>
+            <button class="btn btn-primary" onclick="Sales.openForm()">
+              <span class="material-symbols-outlined">add</span> Nueva venta
+            </button>
+          </div>
         </div>
+
+        <div class="card mb">
+          <div class="row wrap" style="gap:12px">
+            <div class="field"><label>Desde</label><input type="date" class="input" id="sales-from" /></div>
+            <div class="field"><label>Hasta</label><input type="date" class="input" id="sales-to" /></div>
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="sales-summary"></div>
+        <div id="sales-list"></div>
       </section>
 
       <section class="view" id="view-agenda">
@@ -216,20 +234,183 @@
       </section>
 
       <section class="view" id="view-inventory">
-        <div class="page-head"><div><h1 class="page-title">Inventario</h1>
-        <div class="page-sub">Se habilita en la siguiente tanda.</div></div></div>
-        <div class="card empty-state">
-          <span class="material-symbols-outlined">inventory_2</span>
-          <div>El inventario viene en la próxima iteración.</div>
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Inventario</h1>
+            <div class="page-sub">Productos e insumos con alertas de stock</div>
+          </div>
+          <button class="btn btn-primary" onclick="Inventory.openForm()">
+            <span class="material-symbols-outlined">add</span> Nuevo producto
+          </button>
         </div>
+
+        <div class="card mb">
+          <div class="field">
+            <input type="text" class="input" id="inv-search" placeholder="Buscar por nombre, categoría o código…" />
+          </div>
+        </div>
+
+        <div class="kpi-grid" id="inv-stats"></div>
+        <div id="inv-list"></div>
       </section>
     </main>
   </div>
 
-  <!-- Orden de scripts: utils -> db -> backup -> movement -> app -->
+  <!-- ============ MODALES ============ -->
+
+  <!-- Punto de venta -->
+  <div class="modal-overlay" id="modal-sale">
+    <div class="modal glass-strong modal-wide">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem">Nueva venta</h2>
+        <button class="modal-close" onclick="Sales.closeForm()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="sale-form">
+        <div class="grid-2 mb">
+          <div class="field">
+            <label>Paciente / Cliente</label>
+            <select class="input" name="patientId"></select>
+          </div>
+          <div class="field">
+            <label>Método de pago</label>
+            <select class="input" name="paymentMethod"></select>
+          </div>
+        </div>
+
+        <div class="card mb" style="padding:16px">
+          <div class="card-title mb">Agregar ítem</div>
+          <div class="row wrap" style="gap:10px">
+            <div class="field" style="width:130px">
+              <label>Tipo</label>
+              <select class="input" id="item-type" onchange="Sales.onItemTypeChange()">
+                <option value="service">Servicio</option>
+                <option value="product">Producto</option>
+              </select>
+            </div>
+            <div class="field" id="item-picker-service" style="flex:1;min-width:180px">
+              <label>Servicio</label>
+              <select class="input" id="item-service-type" onchange="Sales.onServicePick()"></select>
+            </div>
+            <div class="field" id="item-picker-product" style="flex:1;min-width:180px;display:none">
+              <label>Producto</label>
+              <select class="input" id="item-ref-product" onchange="Sales.onProductPick()"></select>
+            </div>
+          </div>
+          <div class="row wrap mt" style="gap:10px">
+            <div class="field" style="flex:1;min-width:160px">
+              <label>Descripción</label>
+              <input type="text" class="input" id="item-name" placeholder="Nombre del ítem" />
+            </div>
+            <div class="field" style="width:90px">
+              <label>Cant.</label>
+              <input type="number" class="input" id="item-qty" value="1" min="1" step="1" />
+            </div>
+            <div class="field" style="width:140px">
+              <label>Precio unit.</label>
+              <input type="number" class="input" id="item-unit-price" min="0" step="any" placeholder="0" />
+            </div>
+            <button type="button" class="btn" id="btn-add-item" style="align-self:flex-end">
+              <span class="material-symbols-outlined">add</span> Agregar
+            </button>
+          </div>
+        </div>
+
+        <div class="card mb" style="padding:16px">
+          <div class="card-title mb">Carrito</div>
+          <div id="sale-cart"></div>
+          <div class="divider"></div>
+          <div class="row between"><span class="muted">Subtotal</span><span class="mono" id="sale-subtotal">Gs. 0</span></div>
+          <div class="row between mt" style="max-width:260px;margin-left:auto">
+            <span class="muted">Descuento</span>
+            <input type="number" class="input" id="sale-discount" name="discount" min="0" step="any" placeholder="0" oninput="Sales.updateTotals()" style="width:140px" />
+          </div>
+          <div class="row between" style="font-size:1.2rem;margin-top:10px">
+            <strong>Total</strong><strong class="mono" id="sale-total">Gs. 0</strong>
+          </div>
+        </div>
+
+        <div class="field mb">
+          <label>Nota (opcional)</label>
+          <textarea class="input" name="notes" rows="2" placeholder="Observaciones de la venta…"></textarea>
+        </div>
+
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="Sales.closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <span class="material-symbols-outlined">check</span> Registrar venta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detalle de venta -->
+  <div class="modal-overlay" id="modal-sale-view">
+    <div class="modal glass-strong">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem">Detalle de venta</h2>
+        <button class="modal-close" onclick="Sales.closeView()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="sale-view-body"></div>
+    </div>
+  </div>
+
+  <!-- Cierre de caja -->
+  <div class="modal-overlay" id="modal-cash-close">
+    <div class="modal glass-strong">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem">Cierre de caja</h2>
+        <button class="modal-close" onclick="Sales.closeCashClose()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="cash-close-body"></div>
+    </div>
+  </div>
+
+  <!-- Producto (alta/edición) -->
+  <div class="modal-overlay" id="modal-product">
+    <div class="modal glass-strong">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem" id="product-modal-title">Nuevo producto</h2>
+        <button class="modal-close" onclick="Inventory.closeForm()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="product-form">
+        <div class="field mb"><label>Nombre *</label>
+          <input type="text" class="input" name="name" required placeholder="Nombre del producto" /></div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Categoría</label>
+            <input type="text" class="input" name="category" placeholder="Ej: Vacunas, Alimento…" /></div>
+          <div class="field"><label>Código de barras</label>
+            <input type="text" class="input" name="barcode" placeholder="Opcional" /></div>
+        </div>
+        <div class="grid-3 mb">
+          <div class="field"><label>Stock</label>
+            <input type="number" class="input" name="stock" min="0" step="any" value="0" /></div>
+          <div class="field"><label>Stock mínimo</label>
+            <input type="number" class="input" name="minStock" min="0" step="any" value="0" /></div>
+          <div class="field"><label>Precio</label>
+            <input type="number" class="input" name="price" min="0" step="any" value="0" /></div>
+        </div>
+        <div class="field mb"><label>Descripción</label>
+          <textarea class="input" name="description" rows="2" placeholder="Opcional"></textarea></div>
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="Inventory.closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><span class="material-symbols-outlined">save</span> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contenedor off-screen para generar PDFs -->
+  <div id="pdf-container" style="position:fixed;left:-10000px;top:0;width:794px"></div>
+
+  <!-- Orden de scripts: utils -> db -> pdf -> backup -> inventory -> sales -> movement -> app -->
   <script src="js/utils.js"></script>
   <script src="js/db.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+  <script src="js/pdf.js"></script>
   <script src="js/backup.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/sales.js"></script>
   <script src="js/movement.js"></script>
   <script src="js/app.js"></script>
   <script>
