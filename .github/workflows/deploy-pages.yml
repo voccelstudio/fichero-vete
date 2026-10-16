@@ -1,0 +1,41 @@
+name: Deploy 2.0 to GitHub Pages
+
+# Despliega la carpeta /app (VetCare Pro 2.0) a GitHub Pages.
+# Se activa con cada push al branch feature/2.0, y también manualmente.
+on:
+  push:
+    branches: ["feature/2.0"]
+  workflow_dispatch:
+
+# Permisos requeridos para publicar en Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un deploy a la vez (cancela en curso si llega otro push).
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact de la app
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+      - name: Desplegar a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
