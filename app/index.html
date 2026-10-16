@@ -55,9 +55,25 @@
       <button class="nav-link" data-nav="backup">
         <span class="material-symbols-outlined">settings_backup_restore</span> Backup
       </button>
-      <button class="nav-link" id="btn-theme">
-        <span class="material-symbols-outlined">dark_mode</span> Tema
-      </button>
+
+      <!-- Selector de tema visual -->
+      <div class="theme-section">
+        <span class="theme-label">Tema visual</span>
+        <div class="theme-swatches">
+          <button class="theme-swatch" data-skin-opt="glass" title="Cristal (glassmorphism)">
+            <span class="theme-dot glass"></span>Cristal
+          </button>
+          <button class="theme-swatch" data-skin-opt="classic" title="Clásico (limpio)">
+            <span class="theme-dot classic"></span>Clásico
+          </button>
+          <button class="theme-swatch" data-skin-opt="soft" title="Suave (cálido)">
+            <span class="theme-dot soft"></span>Suave
+          </button>
+        </div>
+        <button class="nav-link" id="btn-theme" style="margin-top:10px">
+          <span class="material-symbols-outlined">dark_mode</span> Modo oscuro
+        </button>
+      </div>
     </aside>
 
     <!-- ============ CONTENIDO ============ -->

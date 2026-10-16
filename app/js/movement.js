@@ -125,14 +125,31 @@ const Movement = {
       this._kpi('Turnos generados', 'event', pA.appointments, pB.appointments, v => v);
   },
 
+  // Determina si el fondo actual es claro (skin plano en modo claro) para
+  // elegir texto de eje oscuro; si no, texto claro (glass o modo oscuro).
+  _isLightBg() {
+    const skin = document.documentElement.getAttribute('data-skin');
+    const theme = document.documentElement.getAttribute('data-theme');
+    const flat = skin === 'classic' || skin === 'soft';
+    return flat && theme !== 'dark';
+  },
+
+  // Colores de eje/rejilla según el tema activo.
+  _axisColors() {
+    return this._isLightBg()
+      ? { tick: '#64748b', grid: 'rgba(15,23,42,0.08)' }
+      : { tick: this.palette.tick, grid: this.palette.grid };
+  },
+
   // Config común de Chart.js para el look glass.
   _baseOpts() {
+    const axis = this._axisColors();
     return {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: this.palette.tick, font: { family: 'Plus Jakarta Sans', weight: '600' }, boxWidth: 12 }
+          labels: { color: axis.tick, font: { family: 'Plus Jakarta Sans', weight: '600' }, boxWidth: 12 }
         },
         tooltip: {
           backgroundColor: 'rgba(20,24,50,0.92)',
@@ -145,8 +162,8 @@ const Movement = {
         }
       },
       scales: {
-        x: { ticks: { color: this.palette.tick }, grid: { color: this.palette.grid } },
-        y: { ticks: { color: this.palette.tick }, grid: { color: this.palette.grid }, beginAtZero: true }
+        x: { ticks: { color: axis.tick }, grid: { color: axis.grid } },
+        y: { ticks: { color: axis.tick }, grid: { color: axis.grid }, beginAtZero: true }
       }
     };
   },

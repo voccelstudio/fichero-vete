@@ -29,8 +29,10 @@ const App = {
 
   init() {
     this.applyTheme();
+    this.applySkin();
     this.bindNav();
     this.bindMobileMenu();
+    this.bindThemeControls();
     this.bindBackupControls();
     Movement.init();
     Inventory.init();
@@ -71,7 +73,7 @@ const App = {
     if (toggle && sb) toggle.addEventListener('click', () => sb.classList.toggle('open'));
   },
 
-  // ---- Tema (claro/oscuro) ----
+  // ---- Tema (claro/oscuro) y skin visual ----
   applyTheme() {
     const stored = localStorage.getItem('rm2_theme') || 'light';
     document.documentElement.setAttribute('data-theme', stored);
@@ -81,8 +83,32 @@ const App = {
     const next = cur === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('rm2_theme', next);
-    // Redibujar gráficas para re-pintar colores del eje si hiciera falta.
+    // Redibujar gráficas para re-pintar colores del eje según el modo.
     if (this.currentView === 'movement') Movement.refresh();
+  },
+
+  // Skin visual: 'glass' (default) | 'classic' | 'soft'.
+  applySkin() {
+    const skin = localStorage.getItem('rm2_skin') || 'glass';
+    document.documentElement.setAttribute('data-skin', skin);
+    this._syncSkinSwatches(skin);
+  },
+  setSkin(skin) {
+    document.documentElement.setAttribute('data-skin', skin);
+    localStorage.setItem('rm2_skin', skin);
+    this._syncSkinSwatches(skin);
+    // Las gráficas usan colores de eje según el skin; redibujar.
+    if (this.currentView === 'movement') Movement.refresh();
+  },
+  _syncSkinSwatches(active) {
+    document.querySelectorAll('[data-skin-opt]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-skin-opt') === active);
+    });
+  },
+  bindThemeControls() {
+    document.querySelectorAll('[data-skin-opt]').forEach(btn => {
+      btn.addEventListener('click', () => this.setSkin(btn.getAttribute('data-skin-opt')));
+    });
   },
 
   // ---- Dashboard ----

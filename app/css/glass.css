@@ -445,3 +445,121 @@ select.input option { background: #1e2a4a; color: #fff; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ============================================================
+   SKINS ADICIONALES — opciones más sobrias ("normies")
+   Se aplican con [data-skin] en <html> y se combinan con el
+   modo oscuro [data-theme="dark"].
+     - classic : limpio / corporativo (plano, sin blur)
+     - soft    : cálido / neutro suave (plano)
+   El skin por defecto es "glass" (glassmorphism).
+   ============================================================ */
+
+/* --- Base plana común: ocultar orbes y anular blur --- */
+[data-skin="classic"] body::before, [data-skin="classic"] body::after,
+[data-skin="soft"] body::before,   [data-skin="soft"] body::after { display: none; }
+
+[data-skin="classic"] .glass, [data-skin="classic"] .glass-strong,
+[data-skin="classic"] .card, [data-skin="classic"] .btn,
+[data-skin="classic"] .input, [data-skin="classic"] select.input,
+[data-skin="classic"] textarea.input, [data-skin="classic"] .segmented,
+[data-skin="classic"] .modal-overlay,
+[data-skin="soft"] .glass, [data-skin="soft"] .glass-strong,
+[data-skin="soft"] .card, [data-skin="soft"] .btn,
+[data-skin="soft"] .input, [data-skin="soft"] select.input,
+[data-skin="soft"] textarea.input, [data-skin="soft"] .segmented,
+[data-skin="soft"] .modal-overlay {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+
+/* --- CLÁSICO (corporativo) --- */
+[data-skin="classic"] {
+  --grad-bg: #f3f5fa;
+  --grad-accent: #2563eb;
+  --brand-primary: #2563eb;
+  --brand-secondary: #0ea5e9;
+  --brand-accent: #2563eb;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #ffffff;
+  --glass-border: #e4e8f0;
+  --glass-shadow: 0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.08);
+  --text-strong: #16203a;
+  --text: #2f3a4f;
+  --text-soft: #64748b;
+  --text-faint: #98a2b3;
+}
+[data-skin="classic"][data-theme="dark"] {
+  --grad-bg: #0f172a;
+  --grad-accent: #3b82f6;
+  --brand-primary: #60a5fa;
+  --brand-accent: #60a5fa;
+  --glass-bg: #172033;
+  --glass-bg-strong: #1e293b;
+  --glass-border: #2b3a52;
+  --glass-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  --text-strong: #f1f5f9;
+  --text: #cbd5e1;
+  --text-soft: #94a3b8;
+  --text-faint: #64748b;
+}
+
+/* --- SUAVE (cálido neutro) --- */
+[data-skin="soft"] {
+  --grad-bg: #f5f3ee;
+  --grad-accent: #0d9488;
+  --brand-primary: #0d9488;
+  --brand-secondary: #14b8a6;
+  --brand-accent: #0d9488;
+  --glass-bg: #ffffff;
+  --glass-bg-strong: #ffffff;
+  --glass-border: #e7e2d8;
+  --glass-shadow: 0 1px 2px rgba(60,50,30,0.05), 0 2px 6px rgba(60,50,30,0.06);
+  --text-strong: #2c2a26;
+  --text: #3f3c36;
+  --text-soft: #7a756b;
+  --text-faint: #a8a29a;
+}
+[data-skin="soft"][data-theme="dark"] {
+  --grad-bg: #16150f;
+  --grad-accent: #2dd4bf;
+  --brand-primary: #5eead4;
+  --brand-accent: #5eead4;
+  --glass-bg: #201f18;
+  --glass-bg-strong: #2a281f;
+  --glass-border: #36342a;
+  --glass-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  --text-strong: #f2f0e9;
+  --text: #d6d2c8;
+  --text-soft: #a29d92;
+  --text-faint: #6f6a60;
+}
+
+/* Skins planos: scrollbar y sidebar móvil más sobrios */
+[data-skin="classic"]::-webkit-scrollbar-thumb,
+[data-skin="soft"]::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
+[data-skin="classic"] .data-table tbody tr:hover,
+[data-skin="soft"] .data-table tbody tr:hover { background: rgba(0,0,0,0.03); }
+[data-skin="classic"] .data-table td,
+[data-skin="soft"] .data-table td { border-bottom-color: rgba(0,0,0,0.06); }
+@media (max-width: 860px) {
+  [data-skin="classic"] .sidebar { background: #ffffff; border-right: 1px solid var(--glass-border); }
+  [data-skin="soft"] .sidebar { background: #ffffff; border-right: 1px solid var(--glass-border); }
+}
+
+/* --- Selector de tema (sidebar) --- */
+.theme-section { padding: 12px 14px; margin-top: 6px; border-top: 1px solid var(--glass-border); }
+.theme-label { font-size: 0.72rem; color: var(--text-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block; }
+.theme-swatches { display: flex; gap: 8px; }
+.theme-swatch {
+  flex: 1; cursor: pointer; border-radius: 12px; padding: 8px 4px 6px;
+  border: 2px solid var(--glass-border); background: var(--glass-bg);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: inherit; font-size: 0.66rem; color: var(--text-soft); font-weight: 600;
+  transition: all 0.18s var(--ease);
+}
+.theme-swatch:hover { border-color: var(--brand-primary); color: var(--text-strong); }
+.theme-swatch.active { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(47,125,246,0.25); color: var(--text-strong); }
+.theme-dot { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); }
+.theme-dot.glass { background: linear-gradient(135deg, #6a5cff, #2f7df6, #14b8a6); }
+.theme-dot.classic { background: #2563eb; }
+.theme-dot.soft { background: #0d9488; }
