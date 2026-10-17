@@ -159,6 +159,16 @@ a { color: var(--text-strong); }
 .brand-name { font-weight: 800; font-size: 1.02rem; color: var(--text-strong); line-height: 1.1; }
 .brand-sub { font-size: 0.72rem; color: var(--text-soft); letter-spacing: 0.04em; }
 
+/* Logo de la marca (reemplaza el texto "VetCare Pro") */
+.brand-logo-img {
+  height: 80px;
+  width: auto;
+  border-radius: 14px;
+  display: block;
+  flex-shrink: 0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
 .nav-link {
   display: flex;
   align-items: center;

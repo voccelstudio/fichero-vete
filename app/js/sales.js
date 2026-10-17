@@ -154,7 +154,8 @@ const Sales = {
   },
 
   // ---------- Punto de venta (alta) ----------
-  openForm() {
+  async openForm() {
+    await this.loadCatalog();   // refrescar pacientes/productos antes de vender
     this._cart = [];
     const modal = document.getElementById('modal-sale');
     const form = document.getElementById('sale-form');

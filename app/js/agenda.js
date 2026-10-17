@@ -138,7 +138,8 @@ const Agenda = {
   },
 
   // ---------- Alta / edición ----------
-  openForm(id = null) {
+  async openForm(id = null) {
+    await this.loadPatients();   // refrescar pacientes recién creados
     const modal = document.getElementById('modal-appointment');
     const title = document.getElementById('appointment-modal-title');
     const form = document.getElementById('appointment-form');

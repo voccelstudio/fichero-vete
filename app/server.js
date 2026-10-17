@@ -73,5 +73,5 @@ server.listen(PORT, '127.0.0.1', () => {
     : process.platform === 'darwin'
       ? `open "${url}"`
       : `xdg-open "${url}"`;
-  exec(cmd, () => {});
+  if (!process.env.VETCARE_NO_OPEN) exec(cmd, () => {});
 });

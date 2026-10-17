@@ -91,7 +91,8 @@ const Services = {
   },
 
   // ---------- Alta / edición ----------
-  openForm(id = null) {
+  async openForm(id = null) {
+    await this.loadCatalog();   // refrescar pacientes/insumos recién creados
     const modal = document.getElementById('modal-service');
     const title = document.getElementById('service-modal-title');
     const form = document.getElementById('service-form');
