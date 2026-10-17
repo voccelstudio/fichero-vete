@@ -260,7 +260,10 @@ async function downloadBackup() {
 }
 
 // Lee un File/JSON y lo importa. Devuelve el resultado o lanza Error.
-async function importBackupFromFile(file) {
+// Importa un archivo de backup.
+// Con `opts.replace = true` borra TODOS los datos actuales antes de
+// importar (reemplazo total, pensado para migrar de la 1.0 a la 2.0).
+async function importBackupFromFile(file, opts = {}) {
   const text = await file.text();
   let json;
   try {
@@ -268,6 +271,13 @@ async function importBackupFromFile(file) {
   } catch (e) {
     throw new Error('El archivo no es un JSON válido.');
   }
+  // Validar el formato ANTES de borrar nada.
+  validateBackup(json);
+
+  if (opts.replace) {
+    await DB.clearAll();
+  }
   const result = await importLegacyBackup(json, DB);
+  result.replaced = !!opts.replace;
   return result;
 }

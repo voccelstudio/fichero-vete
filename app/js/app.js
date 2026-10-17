@@ -27,7 +27,7 @@ function toast(message, type = 'info') {
 const App = {
   currentView: 'dashboard',
 
-  async init() {
+  init() {
     this.applyTheme();
     this.applySkin();
     this.bindNav();
@@ -40,8 +40,6 @@ const App = {
     Patients.init();
     Agenda.init();
     Services.init();
-    // MODO DEMO: carga datos de ejemplo si la base está vacía.
-    if (typeof Demo !== 'undefined') await Demo.maybeSeed();
     this.navigate('movement');   // primer landing: el módulo estrella
     this.loadDashboard();
   },
@@ -148,19 +146,25 @@ const App = {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        const ok = confirm(
+          '⚠ IMPORTAR REEMPLAZA TODOS LOS DATOS\n\n' +
+          'Se van a borrar los datos actuales (pacientes, servicios, turnos, ' +
+          'inventario, ventas, etc.) y se cargarán únicamente los del archivo.\n\n' +
+          '¿Querés continuar?'
+        );
+        if (!ok) { fileInput.value = ''; return; }
         try {
-          const result = await importBackupFromFile(file);
+          const result = await importBackupFromFile(file, { replace: true });
           const total = Object.values(result.counts).reduce((a, b) => a + b, 0);
           let msg = `Backup v${result.version} importado: ${total} registros.`;
           if (result.warnings && result.warnings.length) {
             msg += ` (${result.warnings.length} avisos)`;
           }
           toast(msg, 'success');
-          this.loadBackupView();
-          if (this.currentView === 'movement') Movement.refresh();
+          // Recargar para que todos los módulos lean la base nueva.
+          setTimeout(() => location.reload(), 1400);
         } catch (err) {
           toast(err.message, 'error');
-        } finally {
           fileInput.value = '';
         }
       });

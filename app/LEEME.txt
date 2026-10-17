@@ -1,0 +1,73 @@
+========================================================
+  VetCare Pro 2.0 - Sistema de gestion veterinaria
+  Version OFFLINE (funciona sin internet)
+========================================================
+
+QUE ES
+------
+Aplicacion completa para clínicas veterinarias: pacientes,
+servicios, turnos (agenda), inventario, ventas/caja y reportes.
+Todos los datos se guardan en TU computadora, en el navegador.
+No necesita internet ni servidores externos.
+
+
+REQUISITOS
+----------
+- Un navegador actualizado: Google Chrome, Microsoft Edge o Firefox.
+- Node.js (recomendado) o Python 3, para levantar el servidor local.
+  * Node.js:  https://nodejs.org   (boton "LTS")
+  * Python:   https://www.python.org/downloads/
+
+
+COMO ABRIRLA (Windows)
+----------------------
+1) Descomprimi esta carpeta donde quieras (ej: Escritorio).
+2) Hace doble clic en  start.bat
+3) Se abre sola una ventana y el navegador en:
+        http://localhost:8080
+4) Deja esa ventana ABIERTA mientras usas la app.
+   Para cerrar el sistema, cerra esa ventana (o Ctrl + C).
+
+
+COMO ABRIRLA (macOS / Linux)
+----------------------------
+1) Abri una terminal en esta carpeta.
+2) Ejecuta:   ./start.sh
+   (si da error de permisos:  chmod +x start.sh  y volve a intentar)
+3) Se abre el navegador en http://localhost:8080
+
+
+PRIMEROS PASOS
+--------------
+- Carga los datos de tu clinica desde la seccion "Backup" y
+  configura nombre, telefono y logo para que salgan en los PDFs.
+- Para cargar los datos de tu version 1.0:
+     Backup -> Importar respaldo -> elegi el archivo .json de la 1.0
+  IMPORTANTE: importar REEMPLAZA todos los datos actuales.
+  Si ya tenias datos cargados, se borran y quedan solo los del archivo.
+
+
+CUIDADO CON LOS DATOS (leer)
+----------------------------
+- Los datos viven en el navegador de ESTA computadora y ESTE usuario.
+  Si usas otro navegador, otra PC o borras "datos de navegacion",
+  vas a ver la app vacia.
+- POR ESO: hace un respaldo seguido.
+     Backup -> Exportar backup   (descarga un archivo .json)
+  Guardalo en un pendrive o en la nube.
+- Para restaurar o migrar: Backup -> Importar respaldo
+  (esto reemplaza todos los datos).
+
+
+DESINSTALAR / MOVER
+-------------------
+- La carpeta se puede mover o copiar a otra PC; mientras tengas
+  Node.js o Python, se sigue abriendo con start.bat.
+- Para "desinstalar": borra la carpeta y, si queres, los datos del
+  navegador de esa PC.
+
+
+SOPORTE
+-------
+VetCare Pro 2.0
+========================================================
