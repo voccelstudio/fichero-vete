@@ -27,7 +27,7 @@ function toast(message, type = 'info') {
 const App = {
   currentView: 'dashboard',
 
-  init() {
+  async init() {
     this.applyTheme();
     this.applySkin();
     this.bindNav();
@@ -39,6 +39,9 @@ const App = {
     Sales.init();
     Patients.init();
     Agenda.init();
+    Services.init();
+    // MODO DEMO: carga datos de ejemplo si la base está vacía.
+    if (typeof Demo !== 'undefined') await Demo.maybeSeed();
     this.navigate('movement');   // primer landing: el módulo estrella
     this.loadDashboard();
   },
@@ -69,6 +72,7 @@ const App = {
     if (view === 'inventory') Inventory.load();
     if (view === 'patients') Patients.load();
     if (view === 'agenda') Agenda.load();
+    if (view === 'services') Services.load();
   },
 
   bindMobileMenu() {

@@ -27,7 +27,7 @@
         </div>
         <div>
           <div class="brand-name">VetCare Pro</div>
-          <div class="brand-sub">Gestión 2.0</div>
+          <div class="brand-sub">Gestión 2.0 · DEMO</div>
         </div>
       </div>
 
@@ -39,6 +39,9 @@
       </button>
       <button class="nav-link" data-nav="patients">
         <span class="material-symbols-outlined">pets</span> Pacientes
+      </button>
+      <button class="nav-link" data-nav="services">
+        <span class="material-symbols-outlined">medical_services</span> Servicios
       </button>
       <button class="nav-link" data-nav="sales">
         <span class="material-symbols-outlined">point_of_sale</span> Ventas / Caja
@@ -282,6 +285,27 @@
         </div>
 
         <div id="agenda-list"></div>
+      </section>
+
+      <!-- ---- SERVICIOS ---- -->
+      <section class="view" id="view-services">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Servicios</h1>
+            <div class="page-sub">Historial clínico de servicios realizados</div>
+          </div>
+          <button class="btn btn-primary" onclick="Services.openForm()">
+            <span class="material-symbols-outlined">add</span> Registrar servicio
+          </button>
+        </div>
+
+        <div class="card mb">
+          <div class="field">
+            <input type="text" class="input" id="svc-search" placeholder="Buscar por tipo, paciente o profesional…" />
+          </div>
+        </div>
+
+        <div id="svc-list"></div>
       </section>
 
       <section class="view" id="view-sales">
@@ -588,17 +612,63 @@
     </div>
   </div>
 
+  <!-- Servicio (alta/edición) -->
+  <div class="modal-overlay" id="modal-service">
+    <div class="modal glass-strong">
+      <div class="modal-head">
+        <h2 class="card-title" style="font-size:1.2rem" id="service-modal-title">Registrar servicio</h2>
+        <button class="modal-close" onclick="Services.closeForm()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <form id="service-form">
+        <div class="field mb"><label>Paciente *</label>
+          <select class="input" name="patientId" id="sf-patient" required></select></div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Tipo de servicio *</label>
+            <select class="input" name="serviceType" id="sf-type"></select></div>
+          <div class="field"><label>Profesional</label>
+            <input type="text" class="input" name="performedBy" placeholder="Ej: Dr. Gómez" /></div>
+        </div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Fecha *</label>
+            <input type="date" class="input" name="date" id="sf-date" required /></div>
+          <div class="field"><label>Hora</label>
+            <input type="time" class="input" name="time" /></div>
+        </div>
+        <div class="grid-2 mb">
+          <div class="field"><label>Precio</label>
+            <input type="number" class="input" name="price" min="0" step="any" placeholder="0" /></div>
+          <div class="field"><label>Insumo utilizado</label>
+            <select class="input" name="productId" id="sf-product">
+              <option value="">Ninguno</option>
+            </select></div>
+        </div>
+        <div class="field mb" id="sf-qty-field" style="display:none">
+          <label>Cantidad de insumo</label>
+          <input type="number" class="input" name="qty" min="1" step="1" value="1" /></div>
+        <div class="field mb"><label>Notas</label>
+          <textarea class="input" name="notes" rows="2" placeholder="Observaciones…"></textarea></div>
+        <div class="row" style="justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="Services.closeForm()">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><span class="material-symbols-outlined">save</span> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Contenedor off-screen para generar PDFs -->
   <div id="pdf-container" style="position:fixed;left:-10000px;top:0;width:794px"></div>
 
-  <!-- Orden de scripts: utils -> db -> pdf -> backup -> inventory -> sales -> movement -> patients -> agenda -> app -->
+  <!-- Orden de scripts: utils -> db -> pdf -> backup -> demo -> inventory -> sales -> services -> movement -> patients -> agenda -> app -->
   <script src="js/utils.js"></script>
   <script src="js/db.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <script src="js/pdf.js"></script>
   <script src="js/backup.js"></script>
+  <script src="js/demo-data.js"></script>
+  <script src="js/demo.js"></script>
   <script src="js/inventory.js"></script>
   <script src="js/sales.js"></script>
+  <script src="js/services.js"></script>
   <script src="js/movement.js"></script>
   <script src="js/patients.js"></script>
   <script src="js/agenda.js"></script>

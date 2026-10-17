@@ -97,12 +97,35 @@ function normalizeService(s, warnings) {
   return out;
 }
 
+// Estados válidos en 2.0 (espejo, con nombres propios para no chocar
+// con el `APPOINTMENT_STATUS` que define agenda.js en el mismo scope global).
+const BACKUP_VALID_APPT_STATUS = { pending: 1, confirmed: 1, completed: 1, cancelled: 1 };
+
+// Estados válidos en 2.0. Backups muy viejos (v2) traían 'scheduled'.
+const BACKUP_LEGACY_APPT_STATUS = {
+  scheduled: 'pending',
+  confirmed: 'confirmed',
+  completed: 'completed',
+  cancelled: 'cancelled',
+  pending: 'pending'
+};
+
 function normalizeAppointment(a, warnings) {
   const out = { ...a };
   // La 1.0 guardaba 'reason'; la 2.0 usa 'type' + 'status'.
   if (!out.type && out.reason) out.type = out.reason;
   if (!out.reason && out.type) out.reason = out.type;   // mantener simetría
   if (!out.status) out.status = 'pending';
+  // Mapear estados legacy a los de 2.0 (ej. 'scheduled' de los backups v2).
+  if (!BACKUP_VALID_APPT_STATUS[out.status]) {
+    const mapped = BACKUP_LEGACY_APPT_STATUS[out.status];
+    if (mapped && mapped !== out.status) {
+      warnings.push(`Turno ${out.id || ''}: estado "${out.status}" migrado a "${mapped}".`);
+      out.status = mapped;
+    } else {
+      out.status = 'pending';
+    }
+  }
   if (!out.date) { out.date = out.createdAt || getToday(); }
   if (!out.id) { warnings.push('Turno sin id: se generó uno nuevo.'); out.id = generateId('TUR'); }
   return out;
