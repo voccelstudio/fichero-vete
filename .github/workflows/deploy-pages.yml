@@ -1,0 +1,55 @@
+# Publica la 2.0 (carpeta /app) en GitHub Pages.
+# Pages legacy solo sirve / o /docs, así que el deploy va por Actions:
+# el workflow empaqueta /app y lo publica en la misma URL del sitio.
+name: deploy pages
+
+on:
+  push:
+    branches: [main]
+    # Solo re-desplegar si cambió lo que se publica. Un commit de docs o del
+    # 1.x de la raíz no debería tocar el sitio.
+    paths:
+      - 'app/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un deploy por commit. Cancelar el anterior evita que un run lento publique
+# después de uno nuevo que ya llegó.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Gate mínimo: si un JS tiene error de sintaxis, no se publica.
+      - name: validate
+        run: |
+          fail=0
+          for f in app/js/*.js; do
+            printf '%s: ' "$f"
+            if node --check "$f"; then echo OK; else echo FALLA; fail=1; fi
+          done
+          test -f app/index.html || { echo "falta app/index.html"; fail=1; }
+          exit $fail
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
