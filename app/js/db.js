@@ -141,12 +141,12 @@ const DB = {
   async getClinicSettings() {
     const all = await this.getAllSettings();
     return {
-      clinicName: all.clinicName || 'República Mascota',
+      clinicName: all.clinicName || 'VetCare Pro',
       clinicEmail: all.clinicEmail || '',
       clinicAddress: all.clinicAddress || '',
       clinicPhone: all.clinicPhone || '',
       clinicTaxId: all.clinicTaxId || '',
-      clinicLogo: all.clinicLogo || 'assets/logo.jfif',
+      clinicLogo: all.clinicLogo || '',
       clinicVeterinarian: all.clinicVeterinarian || '',
       pdfShowLogo: all.pdfShowLogo !== false,
       pdfShowVat: all.pdfShowVat !== false,

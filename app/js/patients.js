@@ -123,17 +123,42 @@ const Patients = {
     const infoRow = (label, value) => `<div class="row between" style="padding:7px 0;border-bottom:1px solid rgba(128,128,128,0.12)">
       <span class="muted">${label}</span><span>${escapeHtml(value || '—')}</span></div>`;
 
-    const svcRows = services.slice(0, 8).map(s => `
+    const svcRows = services.slice(0, 12).map(s => `
       <div class="row between" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-        <div><strong>${escapeHtml(s.serviceType || 'Servicio')}</strong><div class="muted" style="font-size:0.78rem">${escapeHtml(s.performedBy || '')}</div></div>
-        <span class="muted">${formatDateShort(s.date)}</span>
+        <div><strong>${escapeHtml(s.serviceType || 'Servicio')}</strong><div class="muted" style="font-size:0.78rem">${escapeHtml(s.performedBy || '')}${s.notes ? ' · ' + escapeHtml(s.notes) : ''}</div></div>
+        <div class="row" style="gap:6px">
+          <span class="muted">${formatDateShort(s.date)}</span>
+          <button class="btn btn-sm btn-ghost" title="Enviar reporte por WhatsApp" onclick="Patients.sendServiceWhatsApp('${escapeHtml(s.id)}')"><span class="material-symbols-outlined" style="color:#25D366">chat</span></button>
+        </div>
       </div>`).join('') || '<div class="muted">Sin servicios registrados.</div>';
 
-    const vacRows = vaccinations.slice(0, 8).map(v => `
+    const vacRows = vaccinations.slice(0, 12).map(v => `
       <div class="row between" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
-        <strong>${escapeHtml(v.vaccineName || 'Vacuna')}</strong>
-        <span class="muted">${formatDateShort(v.dateApplied)}</span>
+        <div>
+          <strong>${escapeHtml(v.vaccineName || 'Vacuna')}</strong>
+          ${v.nextDoseDate ? `<div class="muted" style="font-size:0.78rem">Próxima: ${formatDateShort(v.nextDoseDate)}</div>` : ''}
+        </div>
+        <div class="row" style="gap:6px">
+          <span class="muted">${formatDateShort(v.dateApplied)}</span>
+          ${v.nextDoseDate && patient.ownerPhone ? `<button class="btn btn-sm btn-ghost" title="Recordatorio WhatsApp" onclick="Patients.sendVaccineReminder('${escapeHtml(v.id)}')"><span class="material-symbols-outlined" style="color:#25D366">chat</span></button>` : ''}
+        </div>
       </div>`).join('') || '<div class="muted">Sin vacunas registradas.</div>';
+
+    const prescriptions = await DB.getPrescriptionsByPatient(id).catch(() => []);
+    prescriptions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const rxRows = prescriptions.slice(0, 10).map(rx => {
+      const meds = Array.isArray(rx.medications) ? rx.medications.map(m => m.name).filter(Boolean).join(', ') : '';
+      return `<div class="row between" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.1)">
+        <div>
+          <strong>Receta</strong>
+          <div class="muted" style="font-size:0.78rem">${escapeHtml(meds || 'Sin medicamentos detallados')}</div>
+        </div>
+        <div class="row" style="gap:6px">
+          <span class="muted">${formatDateShort(rx.date)}</span>
+          <button class="btn btn-sm btn-ghost" title="Exportar receta PDF" onclick="Patients.exportPrescriptionPDF('${escapeHtml(rx.id)}')"><span class="material-symbols-outlined">picture_as_pdf</span></button>
+        </div>
+      </div>`;
+    }).join('') || '<div class="muted">Sin recetas registradas.</div>';
 
     const body = document.getElementById('patient-detail-body');
     if (body) {
@@ -141,7 +166,13 @@ const Patients = {
       <div class="grid-main-side">
         <div>
           <div class="card mb">
-            <div class="card-title mb">Ficha</div>
+            <div class="row between mb">
+              <div class="card-title">Ficha</div>
+              <div class="row" style="gap:6px">
+                <button class="btn btn-sm btn-ghost" onclick="Patients.openForm('${escapeHtml(p.id)}')" title="Editar"><span class="material-symbols-outlined">edit</span></button>
+                <button class="btn btn-sm btn-ghost" onclick="Patients.exportPDF('${escapeHtml(p.id)}')" title="Exportar ficha PDF"><span class="material-symbols-outlined">picture_as_pdf</span></button>
+              </div>
+            </div>
             ${infoRow('Especie', p.species)}
             ${infoRow('Raza', p.breed)}
             ${infoRow('Sexo', p.sex)}
@@ -167,16 +198,110 @@ const Patients = {
               <div class="muted">Email: ${escapeHtml(p.ownerEmail || '—')}</div>
               <div class="muted">Dir: ${escapeHtml(p.ownerAddress || '—')}</div>
             </div>
+            <div class="row" style="justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-primary" onclick="Patients.exportPDF('${escapeHtml(p.id)}')"><span class="material-symbols-outlined">picture_as_pdf</span> Ficha PDF</button>
+              ${patient.ownerPhone ? `<button class="btn btn-sm btn-ghost" onclick="Patients.contactWhatsApp('${escapeHtml(p.id)}')" title="Contactar por WhatsApp"><span class="material-symbols-outlined" style="color:#25D366">chat</span></button>` : ''}
+            </div>
           </div>
         </div>
       </div>
       <div class="grid-2">
         <div class="card"><div class="card-title mb">Historial de servicios (${services.length})</div>${svcRows}</div>
         <div class="card"><div class="card-title mb">Vacunas (${vaccinations.length})</div>${vacRows}</div>
-      </div>`;
+      </div>
+      <div class="card mt"><div class="card-title mb">Recetas médicas (${prescriptions.length})</div>${rxRows}</div>`;
     }
 
     App.navigate('patient-detail');
+  },
+
+  async exportPDF(id) {
+    try {
+      if (typeof generatePatientPDF !== 'function') {
+        toast('Generador de PDF no disponible.', 'error');
+        return;
+      }
+      await generatePatientPDF(id);
+      toast('Ficha PDF generada.', 'success');
+    } catch (e) {
+      console.error(e);
+      toast('Error al generar PDF de la ficha.', 'error');
+    }
+  },
+
+  async sendServiceWhatsApp(serviceId) {
+    const s = await DB.getService(serviceId);
+    if (!s) return;
+    const patient = await DB.getPatient(s.patientId);
+    if (!patient) return;
+    const phone = patient.ownerPhone;
+    if (!phone) {
+      toast('El paciente no tiene teléfono registrado.', 'error');
+      return;
+    }
+    const settings = await DB.getClinicSettings();
+    const clinic = settings.clinicName || 'VetCare Pro';
+    let message = `🐾 *${clinic} - Reporte Médico*\n\n`;
+    message += `Estimado/a *${patient.ownerName || ''}*,\n`;
+    message += `Te compartimos el reporte de la atención de *${patient.name}*:\n\n`;
+    message += `📅 *Fecha:* ${formatDateShort(s.date)} ${s.time || ''}\n`;
+    message += `🩺 *Servicio:* ${s.serviceType || 'Servicio'}\n`;
+    if (s.performedBy) message += `👨‍⚕️ *Profesional:* ${s.performedBy}\n`;
+    if (s.notes) message += `📝 *Detalles:* ${s.notes}\n`;
+    message += `\n¡Gracias por confiar el cuidado de ${patient.name} en nosotros! 🐾`;
+    const clean = phone.replace(/[^\d+]/g, '');
+    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank');
+  },
+
+  async sendVaccineReminder(vaccineId) {
+    const allVac = await DB.getAllVaccinations();
+    const v = allVac.find(x => x.id === vaccineId);
+    if (!v) return;
+    const patient = await DB.getPatient(v.patientId);
+    if (!patient || !patient.ownerPhone) {
+      toast('El paciente no tiene teléfono registrado.', 'error');
+      return;
+    }
+    const settings = await DB.getClinicSettings();
+    const clinic = settings.clinicName || 'VetCare Pro';
+    const isOverdue = v.nextDoseDate && v.nextDoseDate < getToday();
+    let message = `🐾 *${clinic} - Recordatorio de Vacuna*\n\n`;
+    message += `Hola *${patient.ownerName || ''}*,\n`;
+    if (isOverdue) {
+      message += `Te recordamos que *${patient.name}* tiene vencida la vacuna: *${v.vaccineName}* (venció el ${formatDateShort(v.nextDoseDate)}).\n`;
+    } else {
+      message += `Te recordamos que se aproxima la siguiente dosis de la vacuna *${v.vaccineName}* de *${patient.name}* el día *${formatDateShort(v.nextDoseDate)}*.\n`;
+    }
+    message += `Por favor, agenda un turno para su aplicación.\n\n¡Saludos de ${clinic}! 🐾`;
+    const clean = patient.ownerPhone.replace(/[^\d+]/g, '');
+    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank');
+  },
+
+  async contactWhatsApp(id) {
+    const patient = await DB.getPatient(id);
+    if (!patient || !patient.ownerPhone) {
+      toast('El paciente no tiene teléfono registrado.', 'error');
+      return;
+    }
+    const settings = await DB.getClinicSettings();
+    const clinic = settings.clinicName || 'VetCare Pro';
+    const message = `Hola ${patient.ownerName || ''}, te escribimos desde ${clinic} para coordinar atención de ${patient.name}.`;
+    const clean = patient.ownerPhone.replace(/[^\d+]/g, '');
+    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(message)}`, '_blank');
+  },
+
+  async exportPrescriptionPDF(id) {
+    try {
+      if (typeof generatePrescriptionPDF !== 'function') {
+        toast('Generador de PDF no disponible.', 'error');
+        return;
+      }
+      await generatePrescriptionPDF(id);
+      toast('Receta PDF generada.', 'success');
+    } catch (e) {
+      console.error(e);
+      toast('Error al generar PDF de la receta.', 'error');
+    }
   },
 
   // ---------- Alta / edición ----------

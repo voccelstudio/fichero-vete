@@ -52,6 +52,9 @@
 
       <div class="nav-spacer"></div>
 
+      <button class="nav-link" data-nav="settings">
+        <span class="material-symbols-outlined">settings</span> Configuración
+      </button>
       <button class="nav-link" data-nav="backup">
         <span class="material-symbols-outlined">settings_backup_restore</span> Backup
       </button>
@@ -91,6 +94,28 @@
           </div>
         </div>
         <div class="kpi-grid" id="dash-kpis"></div>
+
+        <div class="card mt" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div class="row" style="gap:10px;align-items:center">
+            <span class="material-symbols-outlined">backup</span>
+            <div>
+              <div style="font-weight:600">Respaldo de datos</div>
+              <div class="muted" id="dash-backup-status">Cargando...</div>
+            </div>
+          </div>
+          <div class="row" style="gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm btn-primary" onclick="downloadBackup().then(()=>{App.loadBackupView();App.loadDashboardBackupStatus();toast('Backup exportado.','success');})"><span class="material-symbols-outlined">download</span> Exportar backup</button>
+            <button class="btn btn-sm btn-ghost" onclick="App.navigate('backup')">Gestionar</button>
+          </div>
+        </div>
+
+        <div class="card mt">
+          <div class="row between mb">
+            <div class="card-title">Vacunas y procedimientos próximos (30 días)</div>
+            <button class="btn btn-sm btn-ghost" onclick="App.navigate('patients')">Ver pacientes</button>
+          </div>
+          <div id="dash-reminders"><div class="muted">Cargando...</div></div>
+        </div>
       </section>
 
       <!-- ---- MOVIMIENTO (comparativo) ---- -->
@@ -168,6 +193,83 @@
               <div class="card-title">Top productos (A)</div>
               <div id="mv-top-products"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- CONFIGURACIÓN ---- -->
+      <section class="view" id="view-settings">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Configuración</h1>
+            <div class="page-sub">Datos de la clínica, logo y opciones de PDF</div>
+          </div>
+          <button class="btn btn-primary" onclick="App.saveSettingsView()">
+            <span class="material-symbols-outlined">save</span> Guardar configuración
+          </button>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title mb">Datos de la clínica</div>
+            <div class="field mb"><label>Nombre de la clínica</label><input class="input" id="cfg-clinicName" placeholder="VetCare Pro"></div>
+            <div class="field mb"><label>Email</label><input class="input" id="cfg-clinicEmail" type="email" placeholder="correo@clinica.com"></div>
+            <div class="field mb"><label>Teléfono</label><input class="input" id="cfg-clinicPhone" placeholder="+xx xxx xxx xxx"></div>
+            <div class="field mb"><label>Dirección</label><input class="input" id="cfg-clinicAddress" placeholder="Dirección completa"></div>
+            <div class="grid-2 mb">
+              <div class="field"><label>ID Fiscal / VAT</label><input class="input" id="cfg-clinicTaxId" placeholder="CUIT/RUT/NIF"></div>
+              <div class="field"><label>Veterinario/a responsable</label><input class="input" id="cfg-clinicVeterinarian" placeholder="Nombre y título"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title mb">Logo de la clínica</div>
+            <div class="card-sub mb">Se usa en la ficha de paciente y en las recetas PDF (PNG/JPG/JPEG/WebP, máx 2MB)</div>
+            <div class="logo-uploader" id="cfg-logo-area" onclick="document.getElementById('cfg-logo-input').click()">
+              <img id="cfg-logo-preview" class="logo-preview" style="display:none" alt="Logo">
+              <div class="logo-placeholder">
+                <span class="material-symbols-outlined">cloud_upload</span>
+                <div>Subir logo</div>
+              </div>
+            </div>
+            <input type="file" id="cfg-logo-input" accept="image/png,image/jpeg,image/jpg,image/webp" hidden onchange="App.handleLogoConfigUpload(event)">
+            <input type="hidden" id="cfg-clinicLogo-data">
+            <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap">
+              <button class="btn btn-sm" onclick="document.getElementById('cfg-logo-input').click()"><span class="material-symbols-outlined">upload</span> Cambiar logo</button>
+              <button class="btn btn-sm btn-ghost" onclick="App.removeLogoConfig()"><span class="material-symbols-outlined">delete</span> Quitar logo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2 mt">
+          <div class="card">
+            <div class="card-title mb">Configuración de PDF</div>
+            <label class="row between" style="padding:8px 0;border-bottom:1px solid rgba(128,128,128,0.12)">
+              <div class="row" style="gap:10px;align-items:center">
+                <span class="material-symbols-outlined">image</span>
+                <span>Mostrar logo en PDF</span>
+              </div>
+              <input type="checkbox" id="cfg-pdf-logo" checked>
+            </label>
+            <label class="row between" style="padding:8px 0">
+              <div class="row" style="gap:10px;align-items:center">
+                <span class="material-symbols-outlined">badge</span>
+                <span>Incluir ID fiscal en PDF</span>
+              </div>
+              <input type="checkbox" id="cfg-pdf-vat" checked>
+            </label>
+          </div>
+
+          <div class="card">
+            <div class="card-title mb">Apariencia</div>
+            <label class="row between" style="padding:8px 0">
+              <div class="row" style="gap:10px;align-items:center">
+                <span class="material-symbols-outlined">dark_mode</span>
+                <span>Modo oscuro</span>
+              </div>
+              <input type="checkbox" id="cfg-theme-dark">
+            </label>
+            <div class="muted" style="font-size:0.85rem;margin-top:6px">Los colores y el estilo visual se pueden ajustar desde el selector de tema en la barra lateral.</div>
           </div>
         </div>
       </section>

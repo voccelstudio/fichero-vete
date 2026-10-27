@@ -563,3 +563,41 @@ select.input option { background: #1e2a4a; color: #fff; }
 .theme-dot.glass { background: linear-gradient(135deg, #6a5cff, #2f7df6, #14b8a6); }
 .theme-dot.classic { background: #2563eb; }
 .theme-dot.soft { background: #0d9488; }
+
+/* --- Logo uploader en configuración --- */
+.logo-uploader {
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(47, 125, 246, 0.08), transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.logo-uploader:hover {
+  border-color: rgba(47, 125, 246, 0.8);
+  box-shadow: 0 20px 40px -30px rgba(47, 125, 246, 0.9);
+}
+.logo-uploader.has-logo {
+  border-style: solid;
+}
+.logo-preview {
+  max-height: 90px;
+  max-width: 90%;
+  object-fit: contain;
+}
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-subtle);
+}
+.logo-uploader.has-logo .logo-placeholder {
+  display: none;
+}
